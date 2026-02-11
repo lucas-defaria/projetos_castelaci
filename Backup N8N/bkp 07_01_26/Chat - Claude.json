@@ -1,0 +1,150 @@
+{
+  "name": "Chat - Claude",
+  "nodes": [
+    {
+      "parameters": {
+        "public": true,
+        "initialMessages": "Chat Claude",
+        "options": {
+          "allowFileUploads": true,
+          "loadPreviousSession": "memory",
+          "customCss": ":root {\n  /* ═══════════════════════════════════════════════════════════\n     🌙 PALETA DE CORES - DARK MODE ESTILO CLAUDE\n     ═══════════════════════════════════════════════════════════ */\n  \n  /* Cores Primárias (Accent) */\n  --chat--color-primary: #D97757;\n  --chat--color-primary-shade-50: #E88B6D;\n  --chat--color-primary-shade-100: #C96847;\n  --chat--color-secondary: #D97757;\n  --chat--color-secondary-shade-50: #E88B6D;\n  \n  /* Cores de Fundo - Dark Mode */\n  --chat--color-background: #1A1A1A;\n  --chat--color-background-elevated: #232323;\n  --chat--color-background-hover: #2A2A2A;\n  --chat--color-surface: #2F2F2F;\n  --chat--color-surface-light: #373737;\n  \n  /* Cores Legadas (mantidas para compatibilidade) */\n  --chat--color-white: #FFFFFF;\n  --chat--color-light: #1A1A1A;\n  --chat--color-light-shade-50: #2A2A2A;\n  --chat--color-light-shade-100: #3A3A3A;\n  \n  /* Cores de Texto */\n  --chat--color-dark: #ECECEC;\n  --chat--color-text-primary: #ECECEC;\n  --chat--color-text-secondary: #A0A0A0;\n  --chat--color-text-muted: #6B6B6B;\n  --chat--color-medium: #6B6B6B;\n  --chat--color-disabled: #4A4A4A;\n  --chat--color-typing: #A0A0A0;\n  \n  /* Bordas */\n  --chat--color-border: #3A3A3A;\n  --chat--color-border-light: #2F2F2F;\n\n  /* ═══════════════════════════════════════════════════════════\n     📐 LAYOUT BASE\n     ═══════════════════════════════════════════════════════════ */\n  \n  --chat--spacing: 1rem;\n  --chat--border-radius: 1.25rem;\n  --chat--border-radius-sm: 0.75rem;\n  --chat--border-radius-lg: 1.5rem;\n  --chat--transition-duration: 0.2s;\n  --chat--font-family: 'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, \n                       'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;\n\n  /* ═══════════════════════════════════════════════════════════\n     🪟 JANELA DO CHAT\n     ═══════════════════════════════════════════════════════════ */\n  \n  --chat--window--width: 420px;\n  --chat--window--height: 650px;\n  --chat--window--bottom: 1.5rem;\n  --chat--window--right: 1.5rem;\n  --chat--window--z-index: 9999;\n  --chat--window--border: 1px solid var(--chat--color-border);\n  --chat--window--border-radius: 1.5rem;\n  --chat--window--margin-bottom: var(--chat--spacing);\n\n  /* ═══════════════════════════════════════════════════════════\n     🔝 HEADER\n     ═══════════════════════════════════════════════════════════ */\n  \n  --chat--header-height: auto;\n  --chat--header--padding: 1.25rem 1.5rem;\n  --chat--header--background: var(--chat--color-background);\n  --chat--header--color: var(--chat--color-text-primary);\n  --chat--header--border-top: none;\n  --chat--header--border-bottom: 1px solid var(--chat--color-border);\n  --chat--header--border-left: none;\n  --chat--header--border-right: none;\n  --chat--heading--font-size: 1.25em;\n  --chat--subtitle--font-size: 0.875rem;\n  --chat--subtitle--line-height: 1.5;\n\n  /* ═══════════════════════════════════════════════════════════\n     💬 MENSAGENS\n     ═══════════════════════════════════════════════════════════ */\n  \n  --chat--message--font-size: 0.9375rem;\n  --chat--message--padding: 1rem 1.25rem;\n  --chat--message--border-radius: var(--chat--border-radius);\n  --chat--message-line-height: 1.6;\n  --chat--message--margin-bottom: 0.75rem;\n  \n  /* Mensagens do Bot */\n  --chat--message--bot--background: var(--chat--color-surface);\n  --chat--message--bot--color: var(--chat--color-text-primary);\n  --chat--message--bot--border: 1px solid var(--chat--color-border-light);\n  \n  /* Mensagens do Usuário */\n  --chat--message--user--background: var(--chat--color-primary);\n  --chat--message--user--color: #FFFFFF;\n  --chat--message--user--border: none;\n  \n  /* Blocos de Código */\n  --chat--message--pre--background: #0D0D0D;\n  \n  /* Lista de Mensagens */\n  --chat--messages-list--padding: 1.5rem;\n\n  /* ═══════════════════════════════════════════════════════════\n     🔘 BOTÃO TOGGLE (ABRIR/FECHAR)\n     ═══════════════════════════════════════════════════════════ */\n  \n  --chat--toggle--size: 60px;\n  --chat--toggle--width: var(--chat--toggle--size);\n  --chat--toggle--height: var(--chat--toggle--size);\n  --chat--toggle--border-radius: 50%;\n  --chat--toggle--background: var(--chat--color-primary);\n  --chat--toggle--hover--background: var(--chat--color-primary-shade-50);\n  --chat--toggle--active--background: var(--chat--color-primary-shade-100);\n  --chat--toggle--color: var(--chat--color-white);\n\n  /* ═══════════════════════════════════════════════════════════\n     ⌨️ ÁREA DE INPUT\n     ═══════════════════════════════════════════════════════════ */\n  \n  --chat--textarea--height: 52px;\n  --chat--textarea--max-height: 200px;\n  --chat--input--font-size: 0.9375rem;\n  --chat--input--border: 1px solid var(--chat--color-border);\n  --chat--input--border-radius: var(--chat--border-radius-lg);\n  --chat--input--padding: 0.875rem 1.25rem;\n  --chat--input--background: var(--chat--color-surface);\n  --chat--input--text-color: var(--chat--color-text-primary);\n  --chat--input--line-height: 1.5;\n  --chat--input--placeholder--font-size: var(--chat--input--font-size);\n  --chat--input--border-active: 1px solid var(--chat--color-primary);\n  --chat--input--left--panel--width: 0;\n\n  /* ═══════════════════════════════════════════════════════════\n     🔳 BOTÕES\n     ═══════════════════════════════════════════════════════════ */\n  \n  --chat--button--color: var(--chat--color-white);\n  --chat--button--background: var(--chat--color-primary);\n  --chat--button--padding: 0.625rem 1.25rem;\n  --chat--button--border-radius: var(--chat--border-radius-sm);\n  --chat--button--hover--color: var(--chat--color-white);\n  --chat--button--hover--background: var(--chat--color-primary-shade-50);\n  --chat--close--button--color-hover: var(--chat--color-primary);\n\n  /* Botão de Enviar */\n  --chat--input--send--button--background: transparent;\n  --chat--input--send--button--color: var(--chat--color-text-secondary);\n  --chat--input--send--button--background-hover: var(--chat--color-surface-light);\n  --chat--input--send--button--color-hover: var(--chat--color-primary);\n  \n  /* Botão de Arquivo */\n  --chat--input--file--button--background: transparent;\n  --chat--input--file--button--color: var(--chat--color-text-secondary);\n  --chat--input--file--button--background-hover: var(--chat--color-surface-light);\n  --chat--input--file--button--color-hover: var(--chat--color-primary);\n  --chat--files-spacing: 0.5rem;\n\n  /* ═══════════════════════════════════════════════════════════\n     📦 BODY E FOOTER\n     ═══════════════════════════════════════════════════════════ */\n  \n  --chat--body--background: var(--chat--color-background);\n  --chat--footer--background: var(--chat--color-background);\n  --chat--footer--color: var(--chat--color-text-secondary);\n}\n\n/* ═══════════════════════════════════════════════════════════════════\n   🎨 ESTILOS CUSTOMIZADOS - DARK MODE CLAUDE\n   ═══════════════════════════════════════════════════════════════════ */\n\n/* Reset e Base */\n* {\n  box-sizing: border-box;\n}\n\n/* Container Principal */\n.chat-window {\n  background: var(--chat--color-background);\n  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5),\n              0 12px 24px -8px rgba(0, 0, 0, 0.3);\n  border: 1px solid var(--chat--color-border);\n  overflow: hidden;\n}\n\n/* Header Elegante */\n.chat-header {\n  background: var(--chat--color-background);\n  border-bottom: 1px solid var(--chat--color-border);\n}\n\n.chat-header h1,\n.chat-header .chat-heading {\n  font-weight: 600;\n  letter-spacing: -0.02em;\n  color: var(--chat--color-text-primary);\n}\n\n.chat-header .chat-subtitle {\n  color: var(--chat--color-text-secondary);\n  font-weight: 400;\n}\n\n/* Área de Mensagens */\n.chat-messages-list {\n  background: var(--chat--color-background);\n  scroll-behavior: smooth;\n}\n\n/* Estilo das Mensagens */\n.chat-message {\n  max-width: 85%;\n  animation: messageSlideIn 0.3s ease-out;\n}\n\n@keyframes messageSlideIn {\n  from {\n    opacity: 0;\n    transform: translateY(10px);\n  }\n  to {\n    opacity: 1;\n    transform: translateY(0);\n  }\n}\n\n/* Mensagens do Bot */\n.chat-message-bot {\n  background: var(--chat--color-surface);\n  border-radius: 1.25rem 1.25rem 1.25rem 0.375rem;\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);\n  border: 1px solid var(--chat--color-border-light);\n}\n\n.chat-message-bot p {\n  color: var(--chat--color-text-primary);\n  line-height: 1.65;\n}\n\n/* Mensagens do Usuário */\n.chat-message-user {\n  background: linear-gradient(135deg, var(--chat--color-primary) 0%, var(--chat--color-primary-shade-100) 100%);\n  border-radius: 1.25rem 1.25rem 0.375rem 1.25rem;\n  box-shadow: 0 2px 12px rgba(217, 119, 87, 0.3);\n  border: none;\n}\n\n.chat-message-user p {\n  color: #FFFFFF;\n}\n\n/* Área de Input Moderna */\n.chat-input {\n  background: var(--chat--color-background);\n  padding: 1rem 1.25rem 1.25rem;\n  border-top: 1px solid var(--chat--color-border);\n}\n\n.chat-input-wrapper,\n.chat-inputs {\n  background: var(--chat--color-surface);\n  border: 1px solid var(--chat--color-border);\n  border-radius: var(--chat--border-radius-lg);\n  transition: all var(--chat--transition-duration) ease;\n  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);\n}\n\n.chat-input-wrapper:focus-within,\n.chat-inputs:focus-within {\n  border-color: var(--chat--color-primary);\n  box-shadow: 0 0 0 3px rgba(217, 119, 87, 0.15),\n              0 2px 8px rgba(0, 0, 0, 0.15);\n}\n\n/* Textarea */\n.chat-input textarea,\n.chat-textarea {\n  background: transparent;\n  border: none;\n  resize: none;\n  font-size: var(--chat--input--font-size);\n  line-height: 1.5;\n  color: var(--chat--color-text-primary);\n  padding: 0.875rem 1rem;\n}\n\n.chat-input textarea::placeholder,\n.chat-textarea::placeholder {\n  color: var(--chat--color-text-muted);\n  opacity: 1;\n}\n\n.chat-input textarea:focus,\n.chat-textarea:focus {\n  outline: none;\n  box-shadow: none;\n}\n\n/* Botão de Enviar */\n.chat-input-send-button,\n.chat-send-button {\n  background: var(--chat--color-primary);\n  color: #FFFFFF;\n  border: none;\n  border-radius: 50%;\n  width: 36px;\n  height: 36px;\n  min-width: 36px;\n  min-height: 36px;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  cursor: pointer;\n  transition: all var(--chat--transition-duration) ease;\n  margin: 0.5rem;\n}\n\n.chat-input-send-button:hover,\n.chat-send-button:hover {\n  background: var(--chat--color-primary-shade-50);\n  transform: scale(1.05);\n  box-shadow: 0 4px 12px rgba(217, 119, 87, 0.4);\n}\n\n.chat-input-send-button:active,\n.chat-send-button:active {\n  transform: scale(0.95);\n}\n\n.chat-input-send-button:disabled,\n.chat-send-button:disabled {\n  background: var(--chat--color-disabled);\n  cursor: not-allowed;\n  transform: none;\n  box-shadow: none;\n}\n\n/* Botão de Arquivo */\n.chat-file-button,\n.chat-input-file-button {\n  background: transparent;\n  color: var(--chat--color-text-secondary);\n  border: none;\n  border-radius: 0.5rem;\n  padding: 0.5rem;\n  cursor: pointer;\n  transition: all var(--chat--transition-duration) ease;\n}\n\n.chat-file-button:hover,\n.chat-input-file-button:hover {\n  background: var(--chat--color-surface-light);\n  color: var(--chat--color-primary);\n}\n\n/* Toggle Button (Flutuante) */\n.chat-toggle-button,\n.chat-toggle {\n  background: linear-gradient(135deg, var(--chat--color-primary) 0%, var(--chat--color-primary-shade-100) 100%);\n  box-shadow: 0 4px 20px rgba(217, 119, 87, 0.4),\n              0 2px 8px rgba(0, 0, 0, 0.2);\n  transition: all var(--chat--transition-duration) ease;\n}\n\n.chat-toggle-button:hover,\n.chat-toggle:hover {\n  transform: scale(1.08);\n  box-shadow: 0 6px 24px rgba(217, 119, 87, 0.5),\n              0 4px 12px rgba(0, 0, 0, 0.25);\n}\n\n.chat-toggle-button:active,\n.chat-toggle:active {\n  transform: scale(0.95);\n}\n\n/* Indicador de Digitação */\n.chat-typing-indicator,\n.typing-indicator {\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  padding: 0.75rem 1rem;\n  background: var(--chat--color-surface);\n  border-radius: 1rem;\n  width: fit-content;\n  border: 1px solid var(--chat--color-border-light);\n}\n\n.chat-typing-indicator span,\n.typing-indicator span {\n  width: 8px;\n  height: 8px;\n  background: var(--chat--color-text-muted);\n  border-radius: 50%;\n  animation: typingBounce 1.4s infinite ease-in-out;\n}\n\n.chat-typing-indicator span:nth-child(1),\n.typing-indicator span:nth-child(1) {\n  animation-delay: -0.32s;\n}\n\n.chat-typing-indicator span:nth-child(2),\n.typing-indicator span:nth-child(2) {\n  animation-delay: -0.16s;\n}\n\n@keyframes typingBounce {\n  0%, 80%, 100% {\n    transform: scale(0.8);\n    opacity: 0.4;\n  }\n  40% {\n    transform: scale(1);\n    opacity: 1;\n  }\n}\n\n/* Blocos de Código nas Mensagens */\n.chat-message pre {\n  background: #0D0D0D;\n  border: 1px solid var(--chat--color-border);\n  border-radius: 0.75rem;\n  padding: 1rem;\n  margin: 0.75rem 0;\n  overflow-x: auto;\n}\n\n.chat-message pre code {\n  background: transparent;\n  color: #E0E0E0;\n  font-family: 'SF Mono', 'Fira Code', 'Monaco', 'Consolas', monospace;\n  font-size: 0.875rem;\n  padding: 0;\n}\n\n.chat-message code:not(pre code) {\n  background: var(--chat--color-surface-light);\n  color: var(--chat--color-primary-shade-50);\n  padding: 0.15rem 0.4rem;\n  border-radius: 0.3rem;\n  font-size: 0.875em;\n  font-family: 'SF Mono', 'Fira Code', 'Monaco', 'Consolas', monospace;\n}\n\n/* Links nas Mensagens */\n.chat-message a {\n  color: var(--chat--color-primary-shade-50);\n  text-decoration: none;\n  border-bottom: 1px solid transparent;\n  transition: all var(--chat--transition-duration) ease;\n}\n\n.chat-message a:hover {\n  color: var(--chat--color-primary);\n  border-bottom-color: var(--chat--color-primary);\n}\n\n/* Footer */\n.chat-footer {\n  background: var(--chat--color-background);\n  text-align: center;\n  padding: 0.75rem;\n  font-size: 0.75rem;\n  color: var(--chat--color-text-muted);\n  border-top: 1px solid var(--chat--color-border);\n}\n\n/* Botão de Fechar */\n.chat-close-button,\n.close-button {\n  background: transparent;\n  color: var(--chat--color-text-secondary);\n  border: none;\n  border-radius: 0.5rem;\n  padding: 0.5rem;\n  cursor: pointer;\n  transition: all var(--chat--transition-duration) ease;\n}\n\n.chat-close-button:hover,\n.close-button:hover {\n  background: var(--chat--color-surface-light);\n  color: var(--chat--color-primary);\n}\n\n/* Scrollbar Customizada - Dark Mode */\n.chat-messages-list::-webkit-scrollbar {\n  width: 6px;\n}\n\n.chat-messages-list::-webkit-scrollbar-track {\n  background: transparent;\n}\n\n.chat-messages-list::-webkit-scrollbar-thumb {\n  background: var(--chat--color-border);\n  border-radius: 3px;\n}\n\n.chat-messages-list::-webkit-scrollbar-thumb:hover {\n  background: var(--chat--color-text-muted);\n}\n\n/* Firefox Scrollbar */\n.chat-messages-list {\n  scrollbar-width: thin;\n  scrollbar-color: var(--chat--color-border) transparent;\n}\n\n/* Responsividade */\n@media (max-width: 480px) {\n  :root {\n    --chat--window--width: 100%;\n    --chat--window--height: 100%;\n    --chat--window--bottom: 0;\n    --chat--window--right: 0;\n    --chat--window--border-radius: 0;\n  }\n  \n  .chat-message {\n    max-width: 90%;\n  }\n}\n\n/* Estados de Loading */\n.chat-loading {\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  padding: 2rem;\n}\n\n.chat-loading::after {\n  content: '';\n  width: 24px;\n  height: 24px;\n  border: 2px solid var(--chat--color-border);\n  border-top-color: var(--chat--color-primary);\n  border-radius: 50%;\n  animation: spin 0.8s linear infinite;\n}\n\n@keyframes spin {\n  to {\n    transform: rotate(360deg);\n  }\n}\n\n/* Mensagens de Erro */\n.chat-error {\n  background: rgba(239, 68, 68, 0.1);\n  border: 1px solid rgba(239, 68, 68, 0.3);\n  color: #F87171;\n  border-radius: var(--chat--border-radius-sm);\n  padding: 0.75rem 1rem;\n  font-size: 0.875rem;\n}\n\n/* Mensagem de Boas-vindas */\n.chat-welcome-message {\n  text-align: center;\n  padding: 2rem;\n  color: var(--chat--color-text-secondary);\n}\n\n.chat-welcome-message h2 {\n  color: var(--chat--color-text-primary);\n  font-size: 1.25rem;\n  font-weight: 600;\n  margin-bottom: 0.5rem;\n}\n\n/* Sugestões de Prompts */\n.chat-suggestions {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 0.5rem;\n  padding: 1rem;\n  justify-content: center;\n}\n\n.chat-suggestion-button {\n  background: var(--chat--color-surface);\n  border: 1px solid var(--chat--color-border);\n  border-radius: 1rem;\n  padding: 0.5rem 1rem;\n  font-size: 0.875rem;\n  color: var(--chat--color-text-secondary);\n  cursor: pointer;\n  transition: all var(--chat--transition-duration) ease;\n}\n\n.chat-suggestion-button:hover {\n  border-color: var(--chat--color-primary);\n  color: var(--chat--color-primary);\n  background: var(--chat--color-background-hover);\n}\n\n/* Listas nas mensagens */\n.chat-message ul,\n.chat-message ol {\n  margin: 0.5rem 0;\n  padding-left: 1.5rem;\n  color: var(--chat--color-text-primary);\n}\n\n.chat-message li {\n  margin-bottom: 0.25rem;\n  line-height: 1.6;\n}\n\n/* Citações/Blockquotes */\n.chat-message blockquote {\n  border-left: 3px solid var(--chat--color-primary);\n  margin: 0.75rem 0;\n  padding: 0.5rem 1rem;\n  background: rgba(217, 119, 87, 0.1);\n  border-radius: 0 0.5rem 0.5rem 0;\n  color: var(--chat--color-text-secondary);\n}\n\n/* Separadores */\n.chat-message hr {\n  border: none;\n  border-top: 1px solid var(--chat--color-border);\n  margin: 1rem 0;\n}\n\n/* Tabelas */\n.chat-message table {\n  width: 100%;\n  border-collapse: collapse;\n  margin: 0.75rem 0;\n  font-size: 0.875rem;\n}\n\n.chat-message th,\n.chat-message td {\n  border: 1px solid var(--chat--color-border);\n  padding: 0.5rem 0.75rem;\n  text-align: left;\n}\n\n.chat-message th {\n  background: var(--chat--color-surface-light);\n  color: var(--chat--color-text-primary);\n  font-weight: 600;\n}\n\n.chat-message td {\n  color: var(--chat--color-text-secondary);\n}\n\n/* Imagens nas mensagens */\n.chat-message img {\n  max-width: 100%;\n  border-radius: 0.75rem;\n  margin: 0.5rem 0;\n}\n\n/* Seleção de texto */\n::selection {\n  background: rgba(217, 119, 87, 0.3);\n  color: var(--chat--color-text-primary);\n}\n\n/* Focus visible para acessibilidade */\n*:focus-visible {\n  outline: 2px solid var(--chat--color-primary);\n  outline-offset: 2px;\n}\n\n/* Transição suave ao abrir/fechar chat */\n.chat-window {\n  animation: chatOpen 0.3s ease-out;\n}\n\n@keyframes chatOpen {\n  from {\n    opacity: 0;\n    transform: scale(0.95) translateY(10px);\n  }\n  to {\n    opacity: 1;\n    transform: scale(1) translateY(0);\n  }\n}",
+          "responseMode": "lastNode"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -256,
+        0
+      ],
+      "id": "864c90de-12b4-41da-b063-6b385c9f5754",
+      "name": "When chat message received",
+      "webhookId": "66ed58d4-9f08-412c-9ddd-a3aa7717826b"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "You are an expert in building and managing N8N workflows. Your role is to help users with solutions, insights, code for Code nodes, workflow construction, and integrations with other applications.\n\nHere is the user's request:\n\n<user_request>\n{{USER_REQUEST}}\n</user_request>\n\nYour expertise includes:\n- Creating and optimizing N8N workflows\n- Writing JavaScript code for N8N Code nodes\n- Integrating N8N with various applications and APIs\n- Troubleshooting workflow issues\n- Providing best practices for workflow design\n- Explaining N8N concepts and functionality\n\nWhen responding to requests:\n\n1. For complex problems or workflow designs, use <scratchpad> tags to think through the solution step-by-step before providing your answer. Consider:\n   - What the user is trying to accomplish\n   - The best N8N nodes to use\n   - Potential challenges or edge cases\n   - Integration requirements\n\n2. Structure your response clearly:\n   - Explain the approach or solution concept first\n   - Provide specific code when requested, formatted in code blocks\n   - Include configuration details for N8N nodes when relevant\n   - Explain why you're recommending specific approaches\n\n3. When providing code for Code nodes:\n   - Use clear variable names\n   - Add comments to explain complex logic\n   - Handle errors appropriately\n   - Work with N8N's data structure (items array)\n\n4. When designing workflows:\n   - Describe the flow of data between nodes\n   - Specify which N8N nodes to use\n   - Explain any necessary configurations\n   - Mention authentication or credential requirements\n\n5. Include best practices and tips when relevant to help the user understand not just the \"how\" but the \"why\"\n\nProvide your complete response inside <answer> tags. Use code blocks (```) for any code snippets, and use clear formatting to make your response easy to follow.\n- Antes de oferecer soluções, faça perguntas para entender o contexto e sempre busque montar um plano antes. Somente execute codigo quando tiver as informações necessárias e o usuário permitir\n<answer>\n[Your response here]\n</answer>"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        208,
+        0
+      ],
+      "id": "78b1ef09-c461-432e-951f-777252e26707",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "claude-opus-4-5-20251101",
+          "mode": "list",
+          "cachedResultName": "Claude Opus 4.5"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [
+        192,
+        224
+      ],
+      "id": "084587e2-588a-4cc3-9199-af2bd9b0ebc0",
+      "name": "Anthropic Chat Model",
+      "credentials": {
+        "anthropicApi": {
+          "id": "dnsKtycFS1yl89Ls",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 20
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        352,
+        224
+      ],
+      "id": "40fce5a0-c125-4595-b27d-c5976e715c47",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 20
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -256,
+        160
+      ],
+      "id": "c8494cfc-5124-442b-adc4-a7bc6f3cc7c4",
+      "name": "Simple Memory1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory1": {
+      "ai_memory": [
+        [
+          {
+            "node": "When chat message received",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "c448a06d-352b-49eb-8721-fdc0596b26e3",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "3d68ce8f18dd9b70ce52f89c30919d7284cd151b5cdfb0c3d9dfdd1b73a7c42e"
+  },
+  "id": "w3cmMhh2MQ5Bf0b8",
+  "tags": []
+}

@@ -1,0 +1,14 @@
+CAIXA =  
+"CAIXA\n\n# Extrato por período\n\nCliente: ELIDIANE ANTUNES FERREIRA\n\nConta: 00527 | 1288 | 000919916769-2\n\nData: 03/06/2025 - 12:33\n\nMês: Maio/2025\n\nPeríodo: 1 - 30\n\nExtrato\n\n|  Data Mov. | Nr. Doc. | Histórico | Valor | Saldo  |\n| --- | --- | --- | --- | --- |\n|   | 000000 | SALD
+INTER = 
+"Inter\n\nSolicitado em: 08/01/2026 - 15h54\n\n# Thayse Marjana Nogueira Gajko\n\nCPF/CNPJ: 861.823.310-20, Instituição: Banco Inter, Agência: 0001-9, Conta: 34253595-1\n\nPeríodo: 01/10/2025 a 08/01/2026\n\n|  Saldo total | Saldo disponível: | Saldo bloqueado:  |\n| --- | --- | --- |\n|  R$
+ITAU = : 
+"itaú\n\nTULIO FRAGA SAMPAIO 026.380.480-11 agência: 0943 conta: 066094-4\n\nsaldo em conta R$ 0,00\n\nLimite da Conta utilizado R$ 0,00\n\nLimite da Conta disponível R$ 0,00\n\nLimite da Conta total* R$ 0,00\n\n* Total contratado. O uso do Limite da Conta e Limite da Conta adicional poderá ter cobrança de juros + IOF.\n\nextrato conta / lançamentos\nperíodo de visualização: 11/07/2024 até 09/10/2024\nemitido em: 09/10/2024 11:58:52\n\n|  data | lançamentos | valor (R$) | saldo (R$)  |\
+Bradesco = 
+"bradesco\n\nBradesco Celular\n\nData: 10/09/2025 - 15h13\n\nNome: ELIAS DA SILVA PEREIRA\n\nExtrato de: Agência: 3269 | Conta: 450168-3 | Movimentação entre: 01/01/2025 e 10/09/2025\nFolha: 11/20\n\n|  Data | Histórico | Docto. | Crédito (R$) | Débito (R$) | Saldo (R$)  |\n| --- | --- | --- | --- | --- | --- |\n|  03/06/2025 | IOF S/ UTILIZACAO LIMITE | 5856587 |  | 3,10 | 9,77  |\n|  06/06/2025 | 
+CRESSOL = 
+
+"CRESOL\nCENTRAL CRESOL SICOPER\nGILBERTO DE OLIVEIRA BORGES, 30\nPASSO FUNDO - RS\n\n# EXTRATO CONSOLIDADO DE CONTA CORRENTE\n\nAgência: 5647 - 2 - PAC ESTEIO\nConta: 32.988-6 - EMERSON RODRIGUES RAUPP\nSegundo Titular:\nConta Integração:\nPeríodo: 02/01/2025 a 30/11/2025\nData/Hora: 08/12/2025 - 09:38:59\n\n|  Nome/Razão Social |   |   | CPF/CNPJ  |   |\n| --- | --- | --- | --- | --- |\n|  
+BANCO DO BRASIL = 
+
+"Extrato de Conta Corrente\n\nCliente LUCAS DE FARIA\n\nPeríodo: 01 a 31/07/2025\n\nAgência: 3122-4 Conta: 33876-1\n\n|  Dia | Lote | Documento | Histórico | Valor  |\n| --- | --- | --- | --- | --- |\n|  30/06/2025 |  |  | Saldo Anterior | 173,94 (+)  |\n|  01/07/2025 | 13105 | 70101 | Pix - Enviado | 135,75 (-)  |\n|   |  |  | 01/07 14:13 Detran/rs |   |\n|   |  |  | Saldo do dia | 38,19 (+)  |\n|   |  |  | Proventos TED |   |\n|  04/07/2025 | 14175 | 386804051 | 341 6902 03141688001 

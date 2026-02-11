@@ -1,0 +1,210 @@
+// Node: Detectar Banco + Normalizar Linhas
+// Identifica o banco através de padrões específicos de cabeçalho
+// e prepara as linhas para parsing
+
+const item = $input.first();
+const { keywords, rawData } = item.json;
+
+// ============================================
+// CONFIGURAÇÃO DE BANCOS
+// Adicione novos bancos aqui seguindo o padrão
+// ============================================
+const BANK_CONFIGS = {
+  SICREDI: {
+    name: 'SICREDI',
+    headerPatterns: [
+      /sicredi/i,
+      /associado:/i,
+      /cooperativa:\s*\d+/i,
+    ],
+    priority: 10
+  },
+  
+  CAIXA: {
+    name: 'CAIXA',
+    headerPatterns: [
+      /^caixa\b/im,                    // "CAIXA" no início de uma linha
+      /#\s*extrato\s*por\s*período/i,  // "# Extrato por período"
+      /lançamento\s*futuro/i,
+    ],
+    priority: 10
+  },
+  
+  INTER: {
+    name: 'INTER',
+    headerPatterns: [
+      /^inter\b/im,                         // "Inter" no início de uma linha
+      /solicitado\s*em:/i,
+      /institui[çc][aã]o:\s*banco\s*inter/i,
+    ],
+    priority: 10
+  },
+  
+  ITAU: {
+    name: 'ITAU',
+    headerPatterns: [
+      /^ita[uú]/im,                    // "itaú" ou "itau" no início de linha
+      /ag[êe]ncia:\s*\d+/i,
+      /conta:\s*\d+/i,
+    ],
+    priority: 10
+  },
+  
+  BRADESCO: {
+    name: 'BRADESCO',
+    headerPatterns: [
+      /^bradesco/im,                   // "bradesco" no início de linha
+      /bradesco\s*celular/i,
+    ],
+    priority: 10
+  },
+  
+  CRESOL: {
+    name: 'CRESOL',
+    headerPatterns: [
+      /cresol/i,
+      /central\s*cresol/i,
+      /extrato\s*consolidado\s*de\s*conta\s*corrente/i,
+    ],
+    priority: 10
+  },
+  
+  BANCO_DO_BRASIL: {
+    name: 'BANCO DO BRASIL',
+    headerPatterns: [
+      /extrato\s*de\s*conta\s*corrente\s+cliente/is,  // Padrão único do BB
+      /saldo\s*anterior\s*em/i,
+    ],
+    priority: 5  // Prioridade menor por não ter nome explícito
+  },
+  
+  NUBANK: {
+  name: 'NUBANK',
+  headerPatterns: [
+    /^nu\b/im,                           // "nU" no início de linha (logo)
+    /ag[êe]ncia\s*0001/i,                // Agência 0001 (exclusivo Nubank)
+    /valores\s*em\s*r\$/i,               // "VALORES EM R$"
+    /#\s*\d{2}\s*de\s*\w+\s*de\s*\d{4}\s*a\s*\d{2}\s*de\s*\w+/i,  // Formato de data do período
+  ],
+  priority: 10
+},
+
+BANRISUL: {
+  name: 'BANRISUL',
+  headerPatterns: [
+    /ban[kr]i?s?ul/i,                    // Cobre: BANRISUL, BANKISUL, BANRSUL, BANKUL, etc.
+    /agencia:\s*\d+\s*-\s*agencia/i,     // "AGENCIA: 0100 - AGENCIA CENTRAL"
+    /conta\.+:\s*[\d.-]+/i,              // "CONTA..: 35.081312.0-4"
+    /sac\s*0800\s*646\s*1515/i,          // SAC específico do Banrisul (quando disponível)
+  ],
+  priority: 10
+},
+};
+
+// ============================================
+// FUNÇÕES DE DETECÇÃO
+// ============================================
+
+/**
+ * Detecta o banco analisando padrões no cabeçalho do extrato
+ * @param {string} data - Dados brutos do extrato
+ * @returns {string} - Nome do banco detectado ou 'DESCONHECIDO'
+ */
+function detectBank(data) {
+  const text = typeof data === 'string' ? data : JSON.stringify(data);
+  
+  // Extrai apenas o cabeçalho (primeiros 500 caracteres)
+  const header = text.substring(0, 500).toLowerCase();
+  
+  let bestMatch = { bank: 'DESCONHECIDO', score: 0, priority: 0 };
+  
+  // Testa cada banco configurado
+  for (const [bankKey, config] of Object.entries(BANK_CONFIGS)) {
+    let score = 0;
+    
+    // Conta quantos padrões deram match
+    for (const pattern of config.headerPatterns) {
+      // Ajusta o regex para trabalhar com texto em lowercase
+      const adjustedPattern = new RegExp(pattern.source, pattern.flags + (pattern.flags.includes('i') ? '' : 'i'));
+      if (adjustedPattern.test(header)) {
+        score++;
+      }
+    }
+    
+    // Calcula porcentagem de match (score / total de padrões)
+    const matchPercentage = score / config.headerPatterns.length;
+    
+    // Atualiza melhor match se:
+    // 1. Tem mais matches absolutos, OU
+    // 2. Tem mesmo número de matches mas maior prioridade
+    if (score > 0 && (
+        score > bestMatch.score || 
+        (score === bestMatch.score && config.priority > bestMatch.priority)
+    )) {
+      bestMatch = {
+        bank: config.name,
+        score: score,
+        priority: config.priority,
+        matchPercentage: matchPercentage
+      };
+    }
+  }
+  
+  // Log para debug (opcional - remover em produção)
+  // console.log('Detecção:', bestMatch);
+  
+  return bestMatch.bank;
+}
+
+/**
+ * Normaliza linhas de tabela colapsando quebras de linha dentro de células
+ * Não é usado pelo banco INTER
+ * @param {string} text - Texto do extrato
+ * @returns {string[]} - Array de linhas normalizadas
+ */
+function collapseTableRows(text) {
+  const rawLines = text.split('\n');
+  const normalized = [];
+  let currentRow = '';
+
+  rawLines.forEach(line => {
+    const trimmed = line.trim();
+    const startsWithPipe = trimmed.startsWith('|');
+
+    if (startsWithPipe) {
+      if (currentRow) normalized.push(currentRow);
+      currentRow = trimmed;
+    } else if (currentRow && trimmed) {
+      currentRow += ' ' + trimmed;
+    } else {
+      if (currentRow) {
+        normalized.push(currentRow);
+        currentRow = '';
+      }
+      normalized.push(line);
+    }
+  });
+
+  if (currentRow) normalized.push(currentRow);
+  return normalized;
+}
+
+// ============================================
+// PROCESSAMENTO PRINCIPAL
+// ============================================
+
+const data = typeof rawData === 'string' ? rawData : JSON.stringify(rawData);
+const banco = detectBank(data);
+
+// Para INTER: não aplicar collapseTableRows, manter dados originais
+// Para outros bancos: aplicar normalização
+const lines = (banco === 'INTER') ? data.split('\n') : collapseTableRows(data);
+
+return {
+  json: {
+    banco,
+    lines,
+    data,
+    keywords
+  }
+};

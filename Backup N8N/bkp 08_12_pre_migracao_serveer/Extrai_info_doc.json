@@ -1,0 +1,283 @@
+{
+  "name": "Extrai_info_doc",
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.mistral.ai/v1/files",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer og5CFMLYoEFg7V4aHhs8hidQEB0ktweD"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "purpose",
+              "value": "ocr"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "data0"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        272,
+        80
+      ],
+      "id": "f762242f-c594-44db-9887-037b72dddfc4",
+      "name": "HTTP Request",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.mistral.ai/v1/files/{{ $json.id }}/url",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "expiry",
+              "value": "24"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer og5CFMLYoEFg7V4aHhs8hidQEB0ktweD"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        496,
+        80
+      ],
+      "id": "edd831e8-1c70-4f1f-be6a-76d32c87e1f1",
+      "name": "HTTP Request1",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.mistral.ai/v1/ocr",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer og5CFMLYoEFg7V4aHhs8hidQEB0ktweD"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"mistral-ocr-latest\",\n  \"document\": {\n    \"type\": \"document_url\",\n    \"document_url\": \"{{ $json.url }}\"\n  },\n  \"include_image_base64\": true\n}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        720,
+        80
+      ],
+      "id": "71ba5503-594b-449f-9416-50c716eaa0ca",
+      "name": "HTTP Request2",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// n8n Function node -> apenas concatena e retorna markdown unificado\nlet mdList = [];\n\nfor (const it of items) {\n  const j = it.json || {};\n  if (typeof j.markdown === 'string' && j.markdown.trim()) mdList.push(j.markdown);\n  if (Array.isArray(j.pages)) {\n    for (const p of j.pages) if (p && p.markdown) mdList.push(p.markdown);\n  }\n  if (j.document && Array.isArray(j.document.pages)) {\n    for (const p of j.document.pages) if (p && p.markdown) mdList.push(p.markdown);\n  }\n}\n\nreturn [{\n  json: {\n    markdown: mdList.join('\\n')\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        944,
+        80
+      ],
+      "id": "cf177cd9-7b66-409a-94eb-a8b5bce91ef8",
+      "name": "Concatena paginas geradas"
+    },
+    {
+      "parameters": {
+        "content": "Extração dos dados de PDF OCR pelo Mistral",
+        "height": 272,
+        "width": 688
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        0
+      ],
+      "typeVersion": 1,
+      "id": "2182eba5-d660-4736-b1cd-5007b8a83333",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "Junta dados de varias paginas em um só objeto",
+        "height": 272,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        688,
+        0
+      ],
+      "typeVersion": 1,
+      "id": "5ee89fc1-16a1-48e8-8679-4f0e053aba93",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "To-Do\n- Aplicar fluxo para extratos que são imagens (analisar ao receber o arquivo, o tipo, e definir um novo caminho de extração para img)\n- Melhorar o chat com IA.\n"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        272
+      ],
+      "typeVersion": 1,
+      "id": "2580c3dd-1fd8-422e-942c-63d4cb7f594c",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "data0",
+              "type": "any"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        32,
+        80
+      ],
+      "id": "e90641fd-62aa-4ce6-95dc-49277afd6829",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9d16ef90-3633-4000-9c1f-43fb94cb46d0",
+              "name": "Output_agent_docs",
+              "value": "={{ $json.markdown }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1152,
+        80
+      ],
+      "id": "1994b137-9b03-4c4f-b13d-342f2582b1ee",
+      "name": "Edit Fields"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request2": {
+      "main": [
+        [
+          {
+            "node": "Concatena paginas geradas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Concatena paginas geradas": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "39d7a792-e0d1-4bb4-b0bb-872e0de3ff56",
+  "meta": {
+    "instanceId": "660643d1f574e452340b0eb6aab9e7aae464846854186887ef6a8d6b7f2f7cde"
+  },
+  "id": "LKqdllD18jBg6TGG",
+  "tags": []
+}

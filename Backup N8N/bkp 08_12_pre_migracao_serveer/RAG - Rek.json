@@ -1,0 +1,1363 @@
+{
+  "name": "RAG - Rek",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "1FEX6-3Ii__Bh0kx-6M0pv0t269ordz53",
+          "mode": "list",
+          "cachedResultName": "bradesco.html",
+          "cachedResultUrl": "https://drive.google.com/file/d/1FEX6-3Ii__Bh0kx-6M0pv0t269ordz53/view?usp=drivesdk"
+        },
+        "options": {
+          "googleFileConversion": {
+            "conversion": {}
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -704,
+        -80
+      ],
+      "id": "5b8b51b4-4bce-4884-b547-2941c406924d",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "x1mCyO9k85h2QbVb",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "html",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -496,
+        -80
+      ],
+      "id": "aa8be431-e601-4f82-affa-2c4d4c691923",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -288,
+        -80
+      ],
+      "id": "4684cfdd-5b7d-4414-a2ff-db70290a9c02",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Entrada: items[0].json.data (seu JSON)\n// Saída: um markdown agrupado por coluna\n\nconst data = items[0].json.data;\n\n// 1. Descobrir todas as colunas existentes dinamicamente\nconst columns = new Set();\n\nfor (const row of data) {\n    Object.keys(row).forEach(key => {\n        if (key !== \"__EMPTY\") columns.add(key);\n    });\n}\n\n// 2. Criar estrutura para guardar valores por coluna\nconst grouped = {};\nfor (const col of columns) grouped[col] = [];\n\n// 3. Preencher agrupamento\nfor (const row of data) {\n    for (const col of columns) {\n        if (row[col] !== undefined && row[col] !== null && row[col] !== \"\") {\n            grouped[col].push(String(row[col]).trim());\n        }\n    }\n}\n\n// 4. Gerar markdown organizado\nlet md = `# Dados Agrupados por Coluna\\n\\n`;\n\nfor (const col of Array.from(columns).sort()) {\n    md += `## Coluna ${col}\\n`;\n    if (grouped[col].length === 0) {\n        md += `_Sem dados_\\n\\n`;\n        continue;\n    }\n\n    for (const entry of grouped[col]) {\n        md += `- ${entry.replace(/\\n/g, \"\\n  \")}\\n`;\n    }\n    md += `\\n`;\n}\n\nreturn [{ json: { markdown: md } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -80,
+        -80
+      ],
+      "id": "a68037d9-c83a-4887-80a9-f12a3eca7f77",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        224,
+        32
+      ],
+      "id": "7d6a3c33-3685-420f-b05e-9667a3fbab37",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "RUEmAfCWDEinEfWW",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "textSplittingMode": "custom",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        672,
+        32
+      ],
+      "id": "c40d8019-7e00-4e4f-9772-e38e5c587061",
+      "name": "Default Data Loader"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -992,
+        512
+      ],
+      "id": "65193039-5615-48c6-a761-8f44b68f962b",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Consulta a base de conhecimento sobre financianmento imobiliário do Bradesco\nDeve ser usada sempre que houver uma dúvida ou pergunta que possa estar documentada.\nRetorna trechos relevantes de texto, sem inferir ou inventar informações adicionais.",
+        "memoryKey": {
+          "__rl": true,
+          "value": "vector_store_key",
+          "mode": "list",
+          "cachedResultName": "vector_store_key"
+        },
+        "topK": 20,
+        "includeDocumentMetadata": false
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreInMemory",
+      "typeVersion": 1.3,
+      "position": [
+        224,
+        192
+      ],
+      "id": "1a909229-607e-4e54-b436-9b8d016d65f0",
+      "name": "VectorStore"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "1d5XfQUmhLxiyA-4JprNc6p7AbPP13QRV",
+          "mode": "list",
+          "cachedResultName": "santander.html",
+          "cachedResultUrl": "https://drive.google.com/file/d/1d5XfQUmhLxiyA-4JprNc6p7AbPP13QRV/view?usp=drivesdk"
+        },
+        "options": {
+          "googleFileConversion": {
+            "conversion": {}
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -688,
+        320
+      ],
+      "id": "6afb7289-ce7d-48ec-88f2-9a2db5b9509e",
+      "name": "Download file1",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "x1mCyO9k85h2QbVb",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "html",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -480,
+        320
+      ],
+      "id": "9e254493-df2a-4b2b-8b56-a9adbda1f0f8",
+      "name": "Extract from File1"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -288,
+        320
+      ],
+      "id": "dfa77226-d50b-46c4-b583-233936b8c52c",
+      "name": "Aggregate1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Entrada: items[0].json.data (seu JSON)\n// Saída: um markdown agrupado por coluna\n\nconst data = items[0].json.data;\n\n// 1. Descobrir todas as colunas existentes dinamicamente\nconst columns = new Set();\n\nfor (const row of data) {\n    Object.keys(row).forEach(key => {\n        if (key !== \"__EMPTY\") columns.add(key);\n    });\n}\n\n// 2. Criar estrutura para guardar valores por coluna\nconst grouped = {};\nfor (const col of columns) grouped[col] = [];\n\n// 3. Preencher agrupamento\nfor (const row of data) {\n    for (const col of columns) {\n        if (row[col] !== undefined && row[col] !== null && row[col] !== \"\") {\n            grouped[col].push(String(row[col]).trim());\n        }\n    }\n}\n\n// 4. Gerar markdown organizado\nlet md = `# Dados Agrupados por Coluna\\n\\n`;\n\nfor (const col of Array.from(columns).sort()) {\n    md += `## Coluna ${col}\\n`;\n    if (grouped[col].length === 0) {\n        md += `_Sem dados_\\n\\n`;\n        continue;\n    }\n\n    for (const entry of grouped[col]) {\n        md += `- ${entry.replace(/\\n/g, \"\\n  \")}\\n`;\n    }\n    md += `\\n`;\n}\n\nreturn [{ json: { markdown: md } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -64,
+        320
+      ],
+      "id": "4d5c37ca-3c6c-4026-804f-da07cc6b39d4",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        528,
+        48
+      ],
+      "id": "c81152e1-150a-4920-96c0-3249a5185d20",
+      "name": "Recursive Character Text Splitter"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "memoryKey": {
+          "__rl": true,
+          "mode": "list",
+          "value": "vector_store_key"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreInMemory",
+      "typeVersion": 1.3,
+      "position": [
+        352,
+        -80
+      ],
+      "id": "7853fa12-f323-42f8-9df7-23aeb3cbdce9",
+      "name": "Simple Vector Store Bradesco"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "memoryKey": {
+          "__rl": true,
+          "mode": "list",
+          "value": "vector_store_key"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreInMemory",
+      "typeVersion": 1.3,
+      "position": [
+        368,
+        320
+      ],
+      "id": "3a3589cd-dc73-4882-864c-967cac3ee1e4",
+      "name": "Simple Vector Store Santander"
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Consulta a base de conhecimento sobre financianmento imobiliário do banco Santander\nDeve ser usada sempre que houver uma dúvida ou pergunta que possa estar documentada.\nRetorna trechos relevantes de texto, sem inferir ou inventar informações adicionais.",
+        "memoryKey": {
+          "__rl": true,
+          "value": "vector_store_key",
+          "mode": "list",
+          "cachedResultName": "vector_store_key"
+        },
+        "topK": 20,
+        "includeDocumentMetadata": false
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreInMemory",
+      "typeVersion": 1.3,
+      "position": [
+        240,
+        592
+      ],
+      "id": "67eff283-89d6-4e3e-9589-303cfdb89e55",
+      "name": "VectorStore1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        432
+      ],
+      "id": "40974b72-310a-4c5c-9b5a-0a025429d757",
+      "name": "Embeddings OpenAI1",
+      "credentials": {
+        "openAiApi": {
+          "id": "RUEmAfCWDEinEfWW",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "textSplittingMode": "custom",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        672,
+        432
+      ],
+      "id": "9dd8f45b-92f6-41b5-9f63-08d0ba3c6e10",
+      "name": "Default Data Loader1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        544,
+        480
+      ],
+      "id": "43f39f84-93db-46e4-b4a5-3682b978d6b4",
+      "name": "Recursive Character Text Splitter1"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "1d5XfQUmhLxiyA-4JprNc6p7AbPP13QRV",
+          "mode": "list",
+          "cachedResultName": "Santander.html",
+          "cachedResultUrl": "https://drive.google.com/file/d/1d5XfQUmhLxiyA-4JprNc6p7AbPP13QRV/view?usp=drivesdk"
+        },
+        "options": {
+          "googleFileConversion": {
+            "conversion": {}
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -704,
+        720
+      ],
+      "id": "8bb6dbdf-56db-45b0-b079-282e164dfe60",
+      "name": "Download file2",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "x1mCyO9k85h2QbVb",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "html",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -496,
+        720
+      ],
+      "id": "0e17d803-29dd-4d17-9f86-3fd873b1793b",
+      "name": "Extract from File2"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -304,
+        720
+      ],
+      "id": "95d078f1-753d-4c32-8a84-baf0415a6edd",
+      "name": "Aggregate2"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Entrada: items[0].json.data (seu JSON)\n// Saída: um markdown agrupado por coluna\n\nconst data = items[0].json.data;\n\n// 1. Descobrir todas as colunas existentes dinamicamente\nconst columns = new Set();\n\nfor (const row of data) {\n    Object.keys(row).forEach(key => {\n        if (key !== \"__EMPTY\") columns.add(key);\n    });\n}\n\n// 2. Criar estrutura para guardar valores por coluna\nconst grouped = {};\nfor (const col of columns) grouped[col] = [];\n\n// 3. Preencher agrupamento\nfor (const row of data) {\n    for (const col of columns) {\n        if (row[col] !== undefined && row[col] !== null && row[col] !== \"\") {\n            grouped[col].push(String(row[col]).trim());\n        }\n    }\n}\n\n// 4. Gerar markdown organizado\nlet md = `# Dados Agrupados por Coluna\\n\\n`;\n\nfor (const col of Array.from(columns).sort()) {\n    md += `## Coluna ${col}\\n`;\n    if (grouped[col].length === 0) {\n        md += `_Sem dados_\\n\\n`;\n        continue;\n    }\n\n    for (const entry of grouped[col]) {\n        md += `- ${entry.replace(/\\n/g, \"\\n  \")}\\n`;\n    }\n    md += `\\n`;\n}\n\nreturn [{ json: { markdown: md } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -80,
+        720
+      ],
+      "id": "a25c48e4-df4f-429f-813e-da2b1df31b00",
+      "name": "Code2"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        224,
+        832
+      ],
+      "id": "06c75e5e-aa09-4bcf-b3d6-cc31f9b535d6",
+      "name": "Embeddings OpenAI2",
+      "credentials": {
+        "openAiApi": {
+          "id": "RUEmAfCWDEinEfWW",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "textSplittingMode": "custom",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        656,
+        832
+      ],
+      "id": "a9e0469f-4197-44c8-94bb-c891ce073216",
+      "name": "Default Data Loader2"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        528,
+        880
+      ],
+      "id": "dc04b8f6-3c51-45fc-ae56-6e20b65aead2",
+      "name": "Recursive Character Text Splitter2"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "memoryKey": {
+          "__rl": true,
+          "mode": "list",
+          "value": "vector_store_key"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreInMemory",
+      "typeVersion": 1.3,
+      "position": [
+        352,
+        720
+      ],
+      "id": "255d5df2-ce2f-42e8-9787-c424f45ac16c",
+      "name": "Simple Vector Store Itau"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "1d5XfQUmhLxiyA-4JprNc6p7AbPP13QRV",
+          "mode": "list",
+          "cachedResultName": "Santander.html",
+          "cachedResultUrl": "https://drive.google.com/file/d/1d5XfQUmhLxiyA-4JprNc6p7AbPP13QRV/view?usp=drivesdk"
+        },
+        "options": {
+          "googleFileConversion": {
+            "conversion": {}
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -704,
+        1136
+      ],
+      "id": "ebe8bd72-787a-4691-87eb-199cb09f81e7",
+      "name": "Download file3",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "x1mCyO9k85h2QbVb",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "html",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -480,
+        1136
+      ],
+      "id": "f9e8b6da-3e78-4b02-b771-7d519619447a",
+      "name": "Extract from File3"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -288,
+        1136
+      ],
+      "id": "3e25ea6a-e6e6-4034-ab18-1ae90956e7e3",
+      "name": "Aggregate3"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Entrada: items[0].json.data (seu JSON)\n// Saída: um markdown agrupado por coluna\n\nconst data = items[0].json.data;\n\n// 1. Descobrir todas as colunas existentes dinamicamente\nconst columns = new Set();\n\nfor (const row of data) {\n    Object.keys(row).forEach(key => {\n        if (key !== \"__EMPTY\") columns.add(key);\n    });\n}\n\n// 2. Criar estrutura para guardar valores por coluna\nconst grouped = {};\nfor (const col of columns) grouped[col] = [];\n\n// 3. Preencher agrupamento\nfor (const row of data) {\n    for (const col of columns) {\n        if (row[col] !== undefined && row[col] !== null && row[col] !== \"\") {\n            grouped[col].push(String(row[col]).trim());\n        }\n    }\n}\n\n// 4. Gerar markdown organizado\nlet md = `# Dados Agrupados por Coluna\\n\\n`;\n\nfor (const col of Array.from(columns).sort()) {\n    md += `## Coluna ${col}\\n`;\n    if (grouped[col].length === 0) {\n        md += `_Sem dados_\\n\\n`;\n        continue;\n    }\n\n    for (const entry of grouped[col]) {\n        md += `- ${entry.replace(/\\n/g, \"\\n  \")}\\n`;\n    }\n    md += `\\n`;\n}\n\nreturn [{ json: { markdown: md } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -64,
+        1136
+      ],
+      "id": "05ea6153-4978-485f-b2de-7b7fad15ea60",
+      "name": "Code3"
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Consulta a base de conhecimento sobre financianmento imobiliário do banco Inter\nDeve ser usada sempre que houver uma dúvida ou pergunta que possa estar documentada.\nRetorna trechos relevantes de texto, sem inferir ou inventar informações adicionais.",
+        "memoryKey": {
+          "__rl": true,
+          "value": "vector_store_key",
+          "mode": "list",
+          "cachedResultName": "vector_store_key"
+        },
+        "topK": 20,
+        "includeDocumentMetadata": false
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreInMemory",
+      "typeVersion": 1.3,
+      "position": [
+        256,
+        1440
+      ],
+      "id": "361dcea9-602f-4bff-9eec-a6931f58bb9e",
+      "name": "VectorStore3"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        1248
+      ],
+      "id": "06ebe4a5-b436-458e-b3ad-6391dcda42e8",
+      "name": "Embeddings OpenAI3",
+      "credentials": {
+        "openAiApi": {
+          "id": "RUEmAfCWDEinEfWW",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "textSplittingMode": "custom",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        672,
+        1248
+      ],
+      "id": "605c61f7-5774-4840-a9fa-51eebd54b7a2",
+      "name": "Default Data Loader3"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        544,
+        1296
+      ],
+      "id": "63e62611-217a-4018-830f-687f33083758",
+      "name": "Recursive Character Text Splitter3"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "memoryKey": {
+          "__rl": true,
+          "mode": "list",
+          "value": "vector_store_key"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreInMemory",
+      "typeVersion": 1.3,
+      "position": [
+        368,
+        1136
+      ],
+      "id": "e3eb5257-0522-4a6d-8968-729f907b8cb4",
+      "name": "Simple Vector Store Inter"
+    },
+    {
+      "parameters": {
+        "public": true,
+        "initialMessages": "Bixo 3.0 Pro Max!\nAgora tenho as seguintes habilidades:\n- Calcular renda pelos extratos\n- Responder sobre a renda calculada\n- Responder sobre documentos gerais sobre Financiamento com base no Help Card !",
+        "options": {
+          "allowFileUploads": true,
+          "subtitle": "Estagiário Castelaci! ",
+          "title": "Bixo 3.0 PRO MAX!",
+          "responseMode": "lastNode"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        112,
+        -288
+      ],
+      "id": "6520cc72-195e-4624-97bd-7503ac848a33",
+      "name": "When chat message received",
+      "webhookId": "6490fbd7-3726-40e5-8cd8-25a488964427"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": []
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        368,
+        -288
+      ],
+      "id": "ba3d5391-1d09-4304-9530-83cb0f41e07e",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('When chat message received').item.json.chatInput }};\n{{ $json.output }}",
+        "options": {
+          "systemMessage": "Você é um agente híbrido com duas funções bem definidas:\n\nRepassar o cálculo de renda gerado por um agente especialista anterior.\n\nResponder dúvidas sobre crédito imobiliário exclusivamente com base na base de conhecimento RAG fornecida (conteúdos extraídos dos arquivos HTML dos bancos convertidos para JSON/Markdown).\n\nSeu comportamento deve seguir estritamente todas as regras abaixo.\n\n────────────────────────────────────────\nFUNÇÃO 1 — REPASSE DE CÁLCULO DE RENDA\n────────────────────────────────────────\n\nAtive esta função quando:\n\nO usuário pedir cálculo de renda.\n\nO usuário enviar extrato bancário.\n\nA mensagem do usuário for vazia, nula ou irrelevante (\".\", \",\", \"?\", \"ok\", \" \").\n\nA intenção for: \"calcular renda\", \"qual minha renda\", \"descobrir renda\", etc.\n\nNessas situações:\n\nApenas repasse integralmente a resposta recebida do agente especializado.\n\nNão modifique, não adicione comentários, não explique, não complemente.\n\nNunca calcule renda você mesmo.\n\n────────────────────────────────────────\nFUNÇÃO 2 — CONSULTORIA EM CRÉDITO IMOBILIÁRIO\n────────────────────────────────────────\n\nAtive esta função em qualquer outra situação que NÃO seja cálculo de renda, incluindo:\n\nSimulações de financiamento\n\nComparação entre bancos\n\nDúvidas sobre taxas, TR, CET, amortização, prazo\n\nHome equity\n\nDocumentação\n\nProdutos imobiliários\n\nRegras, exceções e políticas dos bancos\n\nNesta função, siga ABSOLUTAMENTE estas regras:\n\nSua única fonte de verdade é a base de conhecimento RAG fornecida.\n\nNão pode usar conhecimento externo.\n\nNão pode supor políticas bancárias.\n\nNão pode inventar informações.\n\nSe a informação não existir na base, responda exatamente:\n“Essa informação não está disponível na base de conhecimento. Consulte um consultor.”\n\nSe a pergunta envolver comparação, cálculo ou análise técnico-bancária, use apenas o que estiver na base RAG.\n\nSe ainda não houver dados do banco solicitado, diga:\n“A informação desse banco ainda não está carregada na base de conhecimento.”\n\nSe houver conflito entre informações na base, prefira:\n\nInformações mais específicas\n\nInformações mais recentes (quando houver data)\n\nEstilo de resposta\n\nTécnico\n\nObjetivo\n\nClaro\n\nSem floreios\n\nSem opinião\n\nSem criatividade\n\nReferencie as seções da base quando possível, por exemplo:\n\nProdutos Disponíveis\n\nTarifa\n\nLTV\n\nCarência\n\nAvaliação do Imóvel\n\nDocumentos necessários\n\nQuando faltar informação para simulações, solicite somente o mínimo necessário:\n\nValor do imóvel\n\nEntrada\n\nPrazo\n\nBanco desejado\n\nQuando não souber responder algo, diga:\n“Consulte um consultor.”\n\n────────────────────────────────────────\nIDENTIFICAÇÃO DO INTENTO (RESUMO)\n────────────────────────────────────────\n\n→ Caso 1 — REPASSAR RENDA\nMensagem vazia, símbolo, extrato, ou pedido de cálculo.\n► Reproduza a resposta do agente de renda.\n\n→ Caso 2 — CONSULTORIA IMOBILIÁRIA\nQualquer outra pergunta.\n► Responda apenas com dados da base RAG.\n\n────────────────────────────────────────\nRESTRIÇÕES GERAIS\n────────────────────────────────────────\n\n• Nunca calcule renda.\n• Nunca edite a resposta do agente de renda.\n• Nunca invente informações.\n• Nunca use conhecimento externo.\n• Nunca extrapole com deduções de mercado.\n• Apenas use a base RAG para tudo que envolver crédito imobiliário.\n\n────────────────────────────────────────\nINSTRUÇÃO FINAL\n────────────────────────────────────────\n\nVocê é o agente final.\nSeja técnico, preciso, neutro e use EXCLUSIVAMENTE o que estiver na base RAG.\nQuando a base não tiver a informação, informe isso e oriente o usuário a consultar um especialista."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        1504,
+        -272
+      ],
+      "id": "0c7a5796-0f69-4860-a96c-cac7265e24d3",
+      "name": "Agente principal",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "LKqdllD18jBg6TGG",
+          "mode": "list",
+          "cachedResultName": "Extrai_info_doc"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [
+            "data0"
+          ],
+          "schema": [
+            {
+              "id": "data0",
+              "displayName": "data0",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        896,
+        -416
+      ],
+      "id": "4382d681-2e0a-48ff-9f0b-332e7f7e7539",
+      "name": "Execute Workflow",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "791edcf0-8111-4fe4-8712-8b3c86d5c408",
+              "leftValue": "={{ $json.files }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        624,
+        -288
+      ],
+      "id": "3f0232a8-bd10-40bc-ba43-29a307bc82e7",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "resource": "assistant",
+        "assistantId": {
+          "__rl": true,
+          "value": "asst_1iLASk3oPC485sns6rw8gqqn",
+          "mode": "list",
+          "cachedResultName": "Assistente_credito"
+        },
+        "prompt": "define",
+        "text": "={{ $json.Output_agent_docs }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        1120,
+        -512
+      ],
+      "id": "8a565302-2d2c-43ff-95b7-af7a2eaebd75",
+      "name": "Calcula renda",
+      "credentials": {
+        "openAiApi": {
+          "id": "RUEmAfCWDEinEfWW",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('When chat message received').item.json.sessionId }}",
+        "contextWindowLength": 20
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        1632,
+        -48
+      ],
+      "id": "d7d423f3-9d5d-49ac-b6ee-1c64a9407295",
+      "name": "Simple Memory1"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1392,
+        -64
+      ],
+      "id": "e07fda76-e717-4b87-af35-c41dae1ffe62",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "RUEmAfCWDEinEfWW",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## instruções:\n### 1 \n - Salvar a página do Help Card em html. (Botão direito-Salvar como.\n### 2\n- Renomear os arquivos html, todos conforme abaixo com letra minuscula, sem acento: \nbradesco\nitau\nsantander\ninter\n### 3\n- Salvar na pasta do google drive \"docs_rag_brancos\n\n\n",
+        "height": 592,
+        "width": 288
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1664,
+        192
+      ],
+      "id": "0199e2b3-2275-486b-9e87-21335252b048",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Consulta a base de conhecimento sobre financianmento imobiliário do banco Itau\nDeve ser usada sempre que houver uma dúvida ou pergunta que possa estar documentada.\nRetorna trechos relevantes de texto, sem inferir ou inventar informações adicionais.",
+        "memoryKey": {
+          "__rl": true,
+          "value": "vector_store_key",
+          "mode": "list",
+          "cachedResultName": "vector_store_key"
+        },
+        "topK": 20,
+        "includeDocumentMetadata": false
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreInMemory",
+      "typeVersion": 1.3,
+      "position": [
+        240,
+        1024
+      ],
+      "id": "659d6fb4-5677-45d0-a022-5520b492e06d",
+      "name": "VectorStore2"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Simple Vector Store Bradesco",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Simple Vector Store Bradesco",
+            "type": "ai_embedding",
+            "index": 0
+          },
+          {
+            "node": "VectorStore",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Simple Vector Store Bradesco",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Download file1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Download file2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Download file3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "VectorStore": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agente principal",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file1": {
+      "main": [
+        [
+          {
+            "node": "Extract from File1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File1": {
+      "main": [
+        [
+          {
+            "node": "Aggregate1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate1": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Simple Vector Store Santander",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recursive Character Text Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Simple Vector Store Santander",
+            "type": "ai_embedding",
+            "index": 0
+          },
+          {
+            "node": "VectorStore1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "VectorStore1": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agente principal",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader1": {
+      "ai_document": [
+        [
+          {
+            "node": "Simple Vector Store Santander",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recursive Character Text Splitter1": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader1",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file2": {
+      "main": [
+        [
+          {
+            "node": "Extract from File2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File2": {
+      "main": [
+        [
+          {
+            "node": "Aggregate2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate2": {
+      "main": [
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code2": {
+      "main": [
+        [
+          {
+            "node": "Simple Vector Store Itau",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI2": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Simple Vector Store Itau",
+            "type": "ai_embedding",
+            "index": 0
+          },
+          {
+            "node": "VectorStore2",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader2": {
+      "ai_document": [
+        [
+          {
+            "node": "Simple Vector Store Itau",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recursive Character Text Splitter2": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader2",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file3": {
+      "main": [
+        [
+          {
+            "node": "Extract from File3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File3": {
+      "main": [
+        [
+          {
+            "node": "Aggregate3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate3": {
+      "main": [
+        [
+          {
+            "node": "Code3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code3": {
+      "main": [
+        [
+          {
+            "node": "Simple Vector Store Inter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI3": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Simple Vector Store Inter",
+            "type": "ai_embedding",
+            "index": 0
+          },
+          {
+            "node": "VectorStore3",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader3": {
+      "ai_document": [
+        [
+          {
+            "node": "Simple Vector Store Inter",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recursive Character Text Splitter3": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader3",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "VectorStore3": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agente principal",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Workflow": {
+      "main": [
+        [
+          {
+            "node": "Calcula renda",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Agente principal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Execute Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Agente principal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calcula renda": {
+      "main": [
+        [
+          {
+            "node": "Agente principal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory1": {
+      "ai_memory": [
+        [
+          {
+            "node": "Agente principal",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Agente principal",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "VectorStore2": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agente principal",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "fca89bef-387c-4c37-bff5-dd182a245460",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "660643d1f574e452340b0eb6aab9e7aae464846854186887ef6a8d6b7f2f7cde"
+  },
+  "id": "JbI2zqg1ZzynOu4q",
+  "tags": []
+}

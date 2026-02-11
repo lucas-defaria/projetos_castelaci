@@ -1,0 +1,376 @@
+{
+  "name": "Extrai_info_doc",
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.mistral.ai/v1/files",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer og5CFMLYoEFg7V4aHhs8hidQEB0ktweD"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "purpose",
+              "value": "ocr"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "data0"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        272,
+        80
+      ],
+      "id": "748cb052-aca7-480b-a061-faf1ed4c4479",
+      "name": "HTTP Request",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.mistral.ai/v1/files/{{ $json.id }}/url",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "expiry",
+              "value": "24"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer og5CFMLYoEFg7V4aHhs8hidQEB0ktweD"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        496,
+        80
+      ],
+      "id": "351dd5fb-f4db-49b1-93a0-9df124ee0039",
+      "name": "HTTP Request1",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.mistral.ai/v1/ocr",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer og5CFMLYoEFg7V4aHhs8hidQEB0ktweD"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"mistral-ocr-latest\",\n  \"document\": {\n    \"type\": \"document_url\",\n    \"document_url\": \"{{ $json.url }}\"\n  },\n  \"include_image_base64\": true\n}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        720,
+        80
+      ],
+      "id": "e1cf06c5-5403-4eae-8a6e-e8e1169f1eb9",
+      "name": "HTTP Request2",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// n8n Function node -> apenas concatena e retorna markdown unificado\nlet mdList = [];\n\nfor (const it of items) {\n  const j = it.json || {};\n  if (typeof j.markdown === 'string' && j.markdown.trim()) mdList.push(j.markdown);\n  if (Array.isArray(j.pages)) {\n    for (const p of j.pages) if (p && p.markdown) mdList.push(p.markdown);\n  }\n  if (j.document && Array.isArray(j.document.pages)) {\n    for (const p of j.document.pages) if (p && p.markdown) mdList.push(p.markdown);\n  }\n}\n\nreturn [{\n  json: {\n    markdown: mdList.join('\\n')\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        944,
+        80
+      ],
+      "id": "a0251dfa-6e98-4858-a3d9-c64c2d8fb47d",
+      "name": "Concatena paginas geradas"
+    },
+    {
+      "parameters": {
+        "content": "Extração dos dados de PDF OCR pelo Mistral",
+        "height": 272,
+        "width": 688
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        0
+      ],
+      "typeVersion": 1,
+      "id": "bc94997f-3e46-4413-9c5c-8dba5b8ca2d7",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "Junta dados de varias paginas em um só objeto",
+        "height": 272,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        688,
+        0
+      ],
+      "typeVersion": 1,
+      "id": "9890925c-d788-4682-b749-a10f87388c46",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Readme\n### Extrai info dos docs e já retorna a avaliação de renda, que não é mais feita por IA, mas sim por código\n"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1760,
+        208
+      ],
+      "typeVersion": 1,
+      "id": "1842d87e-e84c-403b-8f6b-0d1f683b6f1c",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "data0",
+              "type": "any"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        64,
+        80
+      ],
+      "id": "dc974a40-7256-48dc-8b78-529216df9d37",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9d16ef90-3633-4000-9c1f-43fb94cb46d0",
+              "name": "Output_agent_docs",
+              "value": "={{ $json.markdown }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1152,
+        80
+      ],
+      "id": "2a8cab95-1507-4df1-92ec-17bf738f41be",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "options": {
+          "allowFileUploads": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -368,
+        -16
+      ],
+      "id": "f44bd566-a0a3-453d-ac97-f08b3248883c",
+      "name": "When chat message received",
+      "webhookId": "9baf4625-5e3f-44ca-a57c-341a9a0fd743"
+    },
+    {
+      "parameters": {
+        "content": "Bancos validados:\nCaixa\nSicredi\nCresol\nBradesco\nBanco do Basil\n",
+        "height": 288
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1504,
+        208
+      ],
+      "id": "a069d59c-1b09-42d8-b3ac-ef991f32e512",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Código para n8n - Function Node\n// Normaliza um extrato bancário em formato único para cálculo de renda\n\nconst item = $input.first();\nconst normalizedTransactions = [];\n\nconst VALID_KEYWORDS = [\n  'pix', 'pix recebido', 'pix transf', 'transferência recebida pelo pix',\n  'depósito', 'deposito', 'doc', 'ted', 'transferência recebida',\n  'transferencia recebida', 'total de entradas', 'salário', 'salario',\n  'recibo', 'recebimento', 'recebido', 'honorários', 'comissão', 'cred pix',\n  'recebimento pix', 'sispag pix', 'rem:', 'rem '\n];\n\nconst INVALID_KEYWORDS = [\n  'rendimento', 'juros', 'rend.', 'renda variável', 'poupança', 'poupanca',\n  'transferencia da poupanca', 'transferência da poupanca',\n  'transferência enviada', 'transferencia enviada', 'pix enviado',\n  'pix-enviado', 'aplicação', 'aplicacao', 'cdb', 'fundos', 'resgate',\n  'compra cartão', 'compra cartao', 'pagamento', 'saque', 'tarifa',\n  'compra com cartão', 'compra com cartao', 'pagamento de boleto',\n  'pix - enviado', 'rfb', 'darf', 'envio pix', 'gastos cartao',\n  'pag ', 'pg ', 'amortizacao', 'liquidacao', 'debito', 'débito',\n  'mobile pag', 'mobilepag', 'compra elo', 'pix qrs', 'des:', 'des ', 'COMPRA', 'rem basica'\n];\n\nconst IGNORE_KEYWORDS = [\n  'saldo', 'saldo anterior', 'saldo final', 'saldo parcial', 'saldo do dia',\n  'saldo em conta', 'limite', 'total', 'resumo', 'extrato'\n];\n\nfunction containsKeyword(text, keywords) {\n  if (!text) return false;\n  const normalizedText = text.toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g, '');\n  return keywords.some(kw => {\n    const normalizedKw = kw.toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g, '');\n    return normalizedText.includes(normalizedKw);\n  });\n}\n\nfunction extractValue(valueStr) {\n  if (!valueStr) return 0;\n  let cleaned = String(valueStr)\n    .replace(/[^\\d,.\\-+CD]/g, '')\n    .trim();\n  const isCredit = cleaned.includes('C');\n  const isDebit = cleaned.includes('D');\n  cleaned = cleaned.replace(/[CD]/g, '');\n  if (cleaned.includes('.') && cleaned.includes(',')) {\n    cleaned = cleaned.replace(/\\./g, '').replace(',', '.');\n  } else if (cleaned.includes(',')) {\n    cleaned = cleaned.replace(',', '.');\n  }\n  let value = parseFloat(cleaned) || 0;\n  if (isDebit && value > 0) value = -value;\n  if (isCredit && value > 0) value = Math.abs(value);\n  return value;\n}\n\nfunction parseValueWithIndicator(parts) {\n  for (let i = parts.length - 1; i >= 0; i--) {\n    const part = parts[i];\n    if (/[+-]?\\s*[\\d.]+,\\d+\\s*[CD]$/i.test(part)) {\n      const indicator = part.trim().slice(-1).toUpperCase();\n      const numeric = part.trim().slice(0, -1);\n      let value = extractValue(numeric);\n      if (indicator === 'D') value = -Math.abs(value);\n      if (indicator === 'C') value = Math.abs(value);\n      return value;\n    }\n  }\n  return extractValue(parts[parts.length - 1] || '');\n}\n\nfunction detectBank(data) {\n  const text = (typeof data === 'string' ? data : JSON.stringify(data)).toLowerCase();\n  if (text.includes('cresol')) return 'CRESSOL';\n  if (text.includes('caixa')) return 'CAIXA';\n  if (text.includes('sicredi') || text.includes('sicred')) return 'SICREDI';\n  if (text.includes('bradesco')) return 'BRADESCO';\n  if (text.includes('itau') || text.includes('itaú')) return 'ITAU';\n  if (text.includes('banco do brasil')) return 'BANCO DO BRASIL';\n  return 'DESCONHECIDO';\n}\n\nfunction collapseTableRows(text) {\n  const rawLines = text.split('\\n');\n  const normalized = [];\n  let currentRow = '';\n\n  rawLines.forEach(line => {\n    const trimmed = line.trim();\n    const startsWithPipe = trimmed.startsWith('|');\n\n    if (startsWithPipe) {\n      if (currentRow) normalized.push(currentRow);\n      currentRow = trimmed;\n    } else if (currentRow && trimmed) {\n      currentRow += ' ' + trimmed;\n    } else {\n      if (currentRow) {\n        normalized.push(currentRow);\n        currentRow = '';\n      }\n      normalized.push(line);\n    }\n  });\n\n  if (currentRow) normalized.push(currentRow);\n  return normalized;\n}\n\nfunction parseCressolRow(parts) {\n  const date = parts[0];\n  const description = [parts[1], parts[2]].filter(Boolean).join(' - ');\n  const value = parseValueWithIndicator(parts.slice(3));\n  return { date, description, value };\n}\n\ntry {\n  const rawData = item.json.Output_agent_docs || item.json;\n  const bank = detectBank(rawData);\n  const data = typeof rawData === 'string' ? rawData : JSON.stringify(rawData);\n  const lines = collapseTableRows(data);\n\n  let lastDate = '';\n  const transactions = [];\n\n  for (let i = 0; i < lines.length; i++) {\n    const line = lines[i];\n    const trimmedLine = line.trim();\n\n    if (!trimmedLine ||\n        /Data\\s*\\|\\s*Descrição/i.test(trimmedLine) ||\n        /Data Movimento/i.test(trimmedLine) && /Lançamento/i.test(trimmedLine) ||\n        trimmedLine.includes('Movimentações de') ||\n        trimmedLine.includes('Cheque especial') ||\n        trimmedLine.includes('Central de atendimento') ||\n        trimmedLine.includes('Identificação') && trimmedLine.includes('Valor') ||\n        trimmedLine.includes('---') ||\n        trimmedLine.includes('===') ||\n        containsKeyword(trimmedLine, IGNORE_KEYWORDS)) {\n      continue;\n    }\n\n    let parts = line.split('|');\n\n    if (trimmedLine.startsWith('|')) {\n      parts = parts.slice(1, -1); // remove apenas as bordas externas\n    }\n\n    parts = parts.map(p => p.trim());\n\n    if (parts.length < 2) continue;\n\n    let date = '', description = '', value = 0;\n\n    if (bank === 'CAIXA') {\n      if (parts.length >= 5) {\n        date = parts[0];\n        description = parts[2];\n        value = parseValueWithIndicator([parts[3]]);\n      } else if (parts.length >= 4) {\n        date = parts[0];\n        description = parts[2];\n        value = parseValueWithIndicator([parts[3]]);\n      }\n    } else if (bank === 'SICREDI') {\n      if (parts.length >= 5) {\n        date = parts[0];\n        description = parts[1];\n        value = extractValue(parts[3]);\n      } else if (parts.length >= 3) {\n        date = parts[0];\n        description = parts[1];\n        value = extractValue(parts[2]);\n      }\n    } else if (bank === 'BRADESCO') {\n      if (parts.length >= 5) {\n        date = parts[0];\n        description = parts[1];\n        const credit = extractValue(parts[3]);\n        const debit = extractValue(parts[4]);\n        value = credit > 0 ? credit : -debit;\n      }\n    } else if (bank === 'ITAU') {\n      if (parts.length >= 3) {\n        date = parts[0];\n        description = parts[1];\n        value = parseValueWithIndicator(parts.slice(2));\n      }\n    } else if (bank === 'BANCO DO BRASIL') {\n      if (parts.length >= 5) {\n        date = parts[0];\n        description = parts[3];\n        const valueStr = parts[4];\n        value = extractValue(valueStr);\n        if (valueStr.includes('(-)')) value = -Math.abs(value);\n      }\n    } else if (bank === 'CRESSOL') {\n      if (parts.length >= 4) {\n        ({ date, description, value } = parseCressolRow(parts));\n      }\n    } else {\n      date = parts[0];\n      description = parts[1] || '';\n      value = parseValueWithIndicator(parts);\n    }\n\n    if (!date || !/\\d{2}\\/\\d{2}\\/\\d{4}/.test(date)) {\n      date = lastDate;\n    }\n\n    if (!date || !/\\d{2}\\/\\d{2}\\/\\d{4}/.test(date)) {\n      continue;\n    }\n\n    lastDate = date;\n    transactions.push({ date, description, value, lineNumber: i + 1 });\n  }\n\n  transactions.forEach(trans => {\n    const desc = trans.description;\n    const val = trans.value;\n    if (containsKeyword(desc, IGNORE_KEYWORDS)) return;\n    if (containsKeyword(desc, INVALID_KEYWORDS)) return;\n    if (val <= 0) return;\n    const isValidEntry = containsKeyword(desc, VALID_KEYWORDS);\n    normalizedTransactions.push({\n      banco: bank,\n      data: trans.date,\n      descricao: desc,\n      valor: val,\n      tipo: 'RENDA',\n      observacao: isValidEntry ? 'Entrada válida' : 'Lançamento duvidoso - revisar',\n      linha_original: trans.lineNumber\n    });\n  });\n\n} catch (error) {\n  console.error('Erro ao processar extrato:', error);\n  throw error;\n}\n\n// Separação entre válidos e duvidosos\nconst validTransactions = normalizedTransactions.filter(t => t.observacao === 'Entrada válida');\nconst suspiciousTransactions = normalizedTransactions.filter(t => t.observacao !== 'Entrada válida');\n\n// Totais válidos\nconst rendaPorMes = {};\nvalidTransactions.forEach(t => {\n  const mes = t.data.substring(3, 10); // MM/YYYY\n  if (!rendaPorMes[mes]) {\n    rendaPorMes[mes] = 0;\n  }\n  rendaPorMes[mes] += t.valor;\n});\n\nconst mesesCalculados = Object.keys(rendaPorMes);\nconst somaRendaValida = validTransactions.reduce((sum, t) => sum + t.valor, 0);\n\nlet totalRenda = somaRendaValida;\nlet estrategiaTotalRenda = 'soma_mensal';\n\nif (mesesCalculados.length > 1) {\n  const somaMeses = mesesCalculados.reduce((acc, mes) => acc + rendaPorMes[mes], 0);\n  totalRenda = somaMeses / mesesCalculados.length;\n  estrategiaTotalRenda = 'media_mensal';\n}\n\nconst totalLancamentosValidos = validTransactions.length;\n\nconst bancoResumo = normalizedTransactions[0]?.banco || detectBank(item.json.Output_agent_docs || item.json);\nconst periodoInicio = normalizedTransactions[0]?.data || '';\nconst periodoFim = normalizedTransactions[normalizedTransactions.length - 1]?.data || '';\n\nreturn {\n  json: {\n    resumo: {\n      banco: bancoResumo,\n      total_renda: parseFloat(totalRenda.toFixed(2)),\n      estrategia_total_renda: estrategiaTotalRenda,\n      meses_considerados: mesesCalculados.length,\n      total_lancamentos_validos: totalLancamentosValidos,\n      renda_por_mes: rendaPorMes,\n      pendencias_conferencia: {\n        possui_lancamentos_duvidosos: suspiciousTransactions.length > 0,\n        quantidade: suspiciousTransactions.length,\n        lancamentos: suspiciousTransactions.map(t => ({\n          data: t.data,\n          descricao: t.descricao,\n          valor: t.valor,\n          linha_original: t.linha_original\n        }))\n      },\n      periodo: {\n        inicio: periodoInicio,\n        fim: periodoFim\n      }\n    },\n    lancamentos: normalizedTransactions,\n    metadata: {\n      data_processamento: new Date().toISOString()\n    }\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1360,
+        80
+      ],
+      "id": "2cd41bd1-5e15-4e2b-8670-797d87f2defd",
+      "name": "Trata dados dos extratos e calcula renda"
+    },
+    {
+      "parameters": {
+        "operation": "toText",
+        "sourceProperty": "resumo",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        1568,
+        80
+      ],
+      "id": "fb5077e1-bc6a-445e-a133-d05d84b16f15",
+      "name": "Convert to File"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request2": {
+      "main": [
+        [
+          {
+            "node": "Concatena paginas geradas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Concatena paginas geradas": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        []
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Trata dados dos extratos e calcula renda",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trata dados dos extratos e calcula renda": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "a45a3c99-c460-4c8b-9f04-51dcb2637377",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "3d68ce8f18dd9b70ce52f89c30919d7284cd151b5cdfb0c3d9dfdd1b73a7c42e"
+  },
+  "id": "qlt2YobQCkfj80iP",
+  "tags": [
+    {
+      "updatedAt": "2025-12-11T14:12:22.923Z",
+      "createdAt": "2025-12-11T14:12:22.923Z",
+      "id": "kX9gqf5HhcwiJ9Ao",
+      "name": "Calculo de Renda"
+    }
+  ]
+}

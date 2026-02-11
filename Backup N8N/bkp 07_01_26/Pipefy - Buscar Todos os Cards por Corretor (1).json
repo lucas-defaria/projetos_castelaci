@@ -1,0 +1,450 @@
+{
+  "name": "Pipefy - Buscar Todos os Cards por Corretor",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "consulta",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "a3df5236-5f4d-4f55-98bc-4f8d1fef15c0",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1232,
+        144
+      ],
+      "webhookId": "consulta-corretor"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Inicializa o controle de paginação\nconst responsavel = $input.first().json.query.corretor;\nreturn [{\n  json: {\n    responsavel: responsavel,\n    cursor: null,\n    allCards: [],\n    pageCount: 0\n  }\n}];"
+      },
+      "id": "1a91265e-e09f-4d0d-852a-f5bd5c259f08",
+      "name": "Inicializar",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -960,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Pega dados da requisição atual\nconst httpResponse = $('HTTP Pipefy').first().json;\nconst initData = $('Inicializar').first().json;\n\n// Dados da página atual\nconst pageInfo = httpResponse.data.allCards.pageInfo;\nconst newCards = httpResponse.data.allCards.edges || [];\n\n// Acumula com cards anteriores\nconst previousCards = initData.allCards || [];\nconst allCards = previousCards.concat(newCards);\n\nreturn [{\n  json: {\n    responsavel: initData.responsavel,\n    allCards: allCards,\n    hasNextPage: pageInfo.hasNextPage,\n    cursor: pageInfo.endCursor,\n    pageCount: (initData.pageCount || 0) + 1,\n    totalCards: allCards.length\n  }\n}];"
+      },
+      "id": "e06c5c07-4c29-4ab0-85f3-4cf7895a79fc",
+      "name": "Acumular Cards",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -480,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "condition-hasnext",
+              "leftValue": "={{ $json.hasNextPage }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "9a92cfb6-3b17-4553-b508-e220392feb7f",
+      "name": "Tem Próxima Página?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -240,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Prepara dados para próxima iteração\nconst data = $input.first().json;\n\nreturn [{\n  json: {\n    responsavel: data.responsavel,\n    cursor: data.cursor,\n    allCards: data.allCards,\n    pageCount: data.pageCount\n  }\n}];"
+      },
+      "id": "791a3860-b053-4741-b32e-a42f8512fa3d",
+      "name": "Preparar Próxima",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Pega dados da requisição HTTP (entrada direta)\nconst httpResponse = $input.first().json;\n\n// Verifica se a resposta é válida\nif (!httpResponse.data || !httpResponse.data.allCards) {\n  throw new Error('Resposta inválida do Pipefy');\n}\n\n// Dados da página atual\nconst pageInfo = httpResponse.data.allCards.pageInfo;\nconst newCards = httpResponse.data.allCards.edges || [];\n\n// Pega cards acumulados do item anterior (passado pelo loop)\n// O workflow precisa passar allCards no fluxo\nconst previousData = $('Preparar Próxima').first().json;\nconst previousCards = previousData.allCards || [];\n\n// Acumula\nconst allCards = previousCards.concat(newCards);\n\n// Log para debug\nconsole.log(`hasNextPage: ${pageInfo.hasNextPage}, cursor: ${pageInfo.endCursor}, total: ${allCards.length}`);\n\nreturn [{\n  json: {\n    responsavel: previousData.responsavel,\n    allCards: allCards,\n    hasNextPage: pageInfo.hasNextPage === true, // Força booleano\n    cursor: pageInfo.endCursor || null,\n    pageCount: (previousData.pageCount || 0) + 1,\n    totalCards: allCards.length\n  }\n}];"
+      },
+      "id": "6bb2a283-0066-40a2-a670-647114e975ea",
+      "name": "Acumular Próxima",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "condition-hasnext-2",
+              "leftValue": "={{ $json.hasNextPage }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "dc052bb1-eccb-4a48-8903-89de5b33ca99",
+      "name": "Continua Loop?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        720,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ═══════════════════════════════════════════════════════════════\n// 🔍 FILTRAR POR CORRETOR\n// ═══════════════════════════════════════════════════════════════\n\nfunction removeAccents(text) {\n  if (typeof text !== 'string') return '';\n  return text.normalize('NFD').replace(/[\\u0300-\\u036f]/g, '');\n}\n\nfunction normalizeForSearch(text) {\n  if (!text || typeof text !== 'string') return '';\n  return removeAccents(text).toLowerCase().trim().replace(/\\s+/g, ' ');\n}\n\nfunction extractAndNormalize(value) {\n  if (!value) return '';\n  let cleanValue = value;\n  if (typeof value === 'string' && value.startsWith('[')) {\n    try {\n      const parsed = JSON.parse(value);\n      if (Array.isArray(parsed) && parsed.length > 0) {\n        cleanValue = parsed.join(', ');\n      }\n    } catch (e) {}\n  }\n  return normalizeForSearch(cleanValue);\n}\n\nfunction getField(fields, name) {\n  const f = fields.find(x => x.name === name);\n  return f?.value || null;\n}\n\nfunction clean(val) {\n  if (!val) return null;\n  try {\n    if (val.startsWith('[')) {\n      const parsed = JSON.parse(val);\n      if (Array.isArray(parsed) && parsed.length > 0) {\n        return parsed.join(', ');\n      }\n    }\n  } catch {}\n  return val;\n}\n\nfunction getResponsavelFromCard(fields) {\n  const possiveisNomes = [\n    'Corretor / Responsável',\n    'Corretor / Responsavel',\n    'Corretor/Responsável',\n    'Responsável',\n    'Responsavel',\n    'Corretor',\n    'Corretor / Imobiliária responsável?',\n    'Consultor',\n    'Vendedor'\n  ];\n  \n  for (const nome of possiveisNomes) {\n    const valor = getField(fields, nome);\n    if (valor && valor !== '[]') {\n      return { campo: nome, valor: valor };\n    }\n  }\n  \n  const campoEncontrado = fields.find(f => {\n    const nomeLower = f.name.toLowerCase();\n    return (nomeLower.includes('responsavel') || \n            nomeLower.includes('responsável') ||\n            nomeLower.includes('corretor')) &&\n           f.value && f.value !== '[]';\n  });\n  \n  if (campoEncontrado) {\n    return { campo: campoEncontrado.name, valor: campoEncontrado.value };\n  }\n  \n  return { campo: null, valor: '' };\n}\n\nfunction extractAllFields(node) {\n  const fields = node.fields || [];\n  const responsavelInfo = getResponsavelFromCard(fields);\n  \n  return {\n    id: node.id,\n    titulo: node.title,\n    dataCriacao: node.createdAt,\n    status: node.current_phase?.name,\n    nomeCliente: getField(fields, 'Nome do cliente / Razão social'),\n    telefone: getField(fields, 'Número de telefone (Restored)'),\n    email: getField(fields, 'Email'),\n    cpf: getField(fields, 'CPF'),\n    cnpj: getField(fields, 'CNPJ'),\n    corretorResponsavel: clean(responsavelInfo.valor),\n    campoResponsavelUsado: responsavelInfo.campo,\n    valorImovel: getField(fields, 'Valor do imóvel'),\n    valorFinanciamento: getField(fields, 'Valor do financiamento'),\n    bancoAprovado: getField(fields, 'Banco aprovado'),\n    valorAprovado: getField(fields, 'Valor aprovado')\n  };\n}\n\n// ═══════════════════════════════════════════════════════════════\n// 🚀 PROCESSAMENTO\n// ═══════════════════════════════════════════════════════════════\n\nconst data = $input.first().json;\nconst responsavelBuscado = $input.first().json.data[0].responsavel;\nconst allCards = $input.first().json.data[0].allCards || [];\n\nif (!responsavelBuscado) {\n  return [{\n    json: {\n      success: false,\n      message: \"Responsável não informado\"\n    }\n  }];\n}\n\nconst responsavelNormalizado = normalizeForSearch(responsavelBuscado);\n\n// Filtra\nconst cards = allCards\n  .filter(e => {\n    const fields = e.node.fields || [];\n    const responsavelInfo = getResponsavelFromCard(fields);\n    if (!responsavelInfo.valor) return false;\n    const valorNormalizado = extractAndNormalize(responsavelInfo.valor);\n    return valorNormalizado.includes(responsavelNormalizado);\n  })\n  .map(e => extractAllFields(e.node));\n\n// Agrupa por fase\nconst cardsPorFase = {};\ncards.forEach(card => {\n  const fase = card.status || 'Sem fase';\n  if (!cardsPorFase[fase]) cardsPorFase[fase] = 0;\n  cardsPorFase[fase]++;\n});\n\nreturn [{\n  json: {\n    success: true,\n    responsavel: responsavelBuscado,\n    total: cards.length,\n    totalCardsNoPipe: allCards.length,\n    paginasConsultadas: data.pageCount,\n    cardsPorFase: cardsPorFase,\n    cards: cards\n  }\n}];"
+      },
+      "id": "9d280bb0-f7c5-428e-b9b7-9bc0cf63adf1",
+      "name": "Filtrar por Corretor",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "id": "99450eb3-bfbb-49ad-99a5-c4e5dd504f50",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        480,
+        288
+      ]
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1216,
+        -48
+      ],
+      "id": "f5403f26-4507-4bbd-9856-dda58b729908",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.pipefy.com/graphql",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJQaXBlZnkiLCJpYXQiOjE3NTg1ODYzNzUsImp0aSI6Ijg5NmRjODQ1LWRkMjktNDNmMi05NWYyLTg1YjAyMTg4N2M3NiIsInN1YiI6MzA0MTY2NzkyLCJ1c2VyIjp7ImlkIjozMDQxNjY3OTIsImVtYWlsIjoibW9yZ2FuYWNhc3RlbGFjaWlAZ21haWwuY29tIn0sInVzZXJfdHlwZSI6ImF1dGhlbnRpY2F0ZWQifQ.EVdPj0edcb1kY1IAz2p021rcht8TI5trrdyLsO2qp36IJXa9kufBJ5h5odDuQdvvjZ0Sn2TpQVmAFp34q_9fAw"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "query",
+              "value": "query { allCards(pipeId: \"303845485\", first: 200) { pageInfo { hasNextPage endCursor } edges { node { id title createdAt current_phase { name } fields { name value } } } } }"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -720,
+        144
+      ],
+      "id": "bf04f5ac-450a-4640-abc2-2a5922f7a0a1",
+      "name": "HTTP Pipefy"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.pipefy.com/graphql",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJQaXBlZnkiLCJpYXQiOjE3NTg1ODYzNzUsImp0aSI6Ijg5NmRjODQ1LWRkMjktNDNmMi05NWYyLTg1YjAyMTg4N2M3NiIsInN1YiI6MzA0MTY2NzkyLCJ1c2VyIjp7ImlkIjozMDQxNjY3OTIsImVtYWlsIjoibW9yZ2FuYWNhc3RlbGFjaWlAZ21haWwuY29tIn0sInVzZXJfdHlwZSI6ImF1dGhlbnRpY2F0ZWQifQ.EVdPj0edcb1kY1IAz2p021rcht8TI5trrdyLsO2qp36IJXa9kufBJ5h5odDuQdvvjZ0Sn2TpQVmAFp34q_9fAw"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "query",
+              "value": "=query { allCards(pipeId: \"303845485\", first: 100, after: \"{{ $json.cursor }}\") { pageInfo { hasNextPage endCursor } edges { node { id title createdAt current_phase { name } fields { name value } } } } }\n"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        256,
+        0
+      ],
+      "id": "6501f3e2-0296-4aad-b35f-1a43a11c8639",
+      "name": "HTTP Próxima Página"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        16,
+        288
+      ],
+      "id": "9b472ee4-4a41-4923-9b3d-a22e75b7292d",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "content": "## Readme\n### Faz a requisição de todas as pagincas do pipe agora. "
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1200,
+        320
+      ],
+      "id": "b298c1c2-afde-4b0f-8afe-32684d7d21f2",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## To-do\n###  - Fazer a requisição no pipe 2 vezes por dia somente para e armazenar em um cache\n"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -960,
+        320
+      ],
+      "id": "aff13330-22ab-4eba-a189-6f543526055f",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Problema\n### Pipefy tem limite de reuisições API em 15 por mês."
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -720,
+        320
+      ],
+      "id": "758ce016-ccdc-4206-a297-1adc0fb50172",
+      "name": "Sticky Note3"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Inicializar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Inicializar": {
+      "main": [
+        [
+          {
+            "node": "HTTP Pipefy",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Acumular Cards": {
+      "main": [
+        [
+          {
+            "node": "Tem Próxima Página?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tem Próxima Página?": {
+      "main": [
+        [
+          {
+            "node": "Preparar Próxima",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar Próxima": {
+      "main": [
+        [
+          {
+            "node": "HTTP Próxima Página",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Acumular Próxima": {
+      "main": [
+        [
+          {
+            "node": "Continua Loop?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Continua Loop?": {
+      "main": [
+        [
+          {
+            "node": "Preparar Próxima",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filtrar por Corretor": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        []
+      ]
+    },
+    "HTTP Pipefy": {
+      "main": [
+        [
+          {
+            "node": "Acumular Cards",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Próxima Página": {
+      "main": [
+        [
+          {
+            "node": "Acumular Próxima",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Filtrar por Corretor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "fc852c44-2239-4680-a4c0-21e48e77ce72",
+  "meta": {
+    "instanceId": "3d68ce8f18dd9b70ce52f89c30919d7284cd151b5cdfb0c3d9dfdd1b73a7c42e"
+  },
+  "id": "fNYxdxNc9rOB4vYH",
+  "tags": []
+}

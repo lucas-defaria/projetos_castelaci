@@ -1,0 +1,259 @@
+{
+  "name": "Pipefy",
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.pipefy.com/graphql",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJQaXBlZnkiLCJpYXQiOjE3NTg1ODYzNzUsImp0aSI6Ijg5NmRjODQ1LWRkMjktNDNmMi05NWYyLTg1YjAyMTg4N2M3NiIsInN1YiI6MzA0MTY2NzkyLCJ1c2VyIjp7ImlkIjozMDQxNjY3OTIsImVtYWlsIjoibW9yZ2FuYWNhc3RlbGFjaWlAZ21haWwuY29tIn0sInVzZXJfdHlwZSI6ImF1dGhlbnRpY2F0ZWQifQ.EVdPj0edcb1kY1IAz2p021rcht8TI5trrdyLsO2qp36IJXa9kufBJ5h5odDuQdvvjZ0Sn2TpQVmAFp34q_9fAw"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "query",
+              "value": "query {\n  allCards(pipeId: \"303845485\", first: 100) {\n    edges {\n      node {\n        id\n        title\n        createdAt\n        current_phase {\n          name\n        }\n        fields {\n          name\n          value\n        }\n      }\n    }\n  }\n}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        160,
+        -208
+      ],
+      "id": "cec6c4cb-bea8-4414-b416-72f9c7ec7a8e",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('When chat message received').item.json.chatInput }}{{ $json.edges[0] }}",
+        "options": {
+          "systemMessage": "Voce é um analista de dados e  gera relatorio com base nos dados que receber e com base no que usuário pedir a você. Seja anitico, e gere insight de negocios, métricas relevantes para negocios e curiosidades importantes que darão ao usurio uma visão maior dos dados que está querendo estudar\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.1,
+      "position": [
+        976,
+        -32
+      ],
+      "id": "ca82b5d1-8df8-4506-9628-43b5c0be4882",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "gpt-4o"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        992,
+        176
+      ],
+      "id": "732bde69-a1a8-4db3-9786-4831a0fede5a",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "1zvZLYC68KHiiMvr",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "Pipefy-car-moved",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -208,
+        -32
+      ],
+      "id": "12a2fdcb-ebc7-4f3a-a3ed-c4df4e18b9e8",
+      "name": "Webhook",
+      "webhookId": "5f92762a-b2b8-4736-8b9e-4aea3d815f2f"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.body.Responsavel_email }}",
+        "subject": "Atualização de Fase",
+        "message": "=Atualização do processo - O processo avançou da fase  {{ $json.body.fase_anterior }} próxima fase {{ $json.body.fase_atuall }}. O  valor aprovado foi de {{ $json.body.valor_aprovado }} junto ao banco {{ $json.body.banco_aprovado }}",
+        "options": {
+          "senderName": "Castelaci Soluções Financeiras"
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        544,
+        -32
+      ],
+      "id": "cdb66937-dc24-4413-ad1a-d30b9b9b6c40",
+      "name": "Send a message",
+      "webhookId": "688daf48-6a07-4ca0-b449-5e34f29a0503",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "umEzxCHxhJEQGSvu",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0ad5a71b-d449-4166-9b04-2944bf0e9040",
+              "name": "body.card_title",
+              "value": "={{ $json.body.card_title }}",
+              "type": "string"
+            },
+            {
+              "id": "992615dc-cffb-4d46-8f3a-7a1b496eb324",
+              "name": "body.card_id",
+              "value": "=",
+              "type": "string"
+            },
+            {
+              "id": "e3dc9786-d3ce-43d4-b01a-5abf77d75730",
+              "name": "body.Responsavel_email",
+              "value": "={{ $json.body.Responsavel_email }}",
+              "type": "string"
+            },
+            {
+              "id": "84506270-4089-4763-b938-240b1e51118f",
+              "name": "body.fase_anterior",
+              "value": "={{ $json.body.fase_anterior }}",
+              "type": "string"
+            },
+            {
+              "id": "07eca270-0dbf-4217-91dd-fba33dc9dd2b",
+              "name": "body.fase_atuall",
+              "value": "={{ $json.body.fase_atuall }}",
+              "type": "string"
+            },
+            {
+              "id": "548f7703-7ce5-40d8-96ca-73025ad5b331",
+              "name": "body.comentario",
+              "value": "={{ $json.body.comentario }}",
+              "type": "string"
+            },
+            {
+              "id": "b821d55c-59cf-4e93-a0c5-46bac8678513",
+              "name": "body.valor_solicitado",
+              "value": "={{ $json.body.valor_solicitado }}",
+              "type": "string"
+            },
+            {
+              "id": "ae104129-b0b5-4cf1-8b3f-a6f8140cb991",
+              "name": "body.valor_aprovado",
+              "value": "={{ $json.body.valor_aprovado }}",
+              "type": "string"
+            },
+            {
+              "id": "633896c2-e06b-4d5f-a044-9ace815070a8",
+              "name": "body.banco_aprovado",
+              "value": "={{ $json.body.banco_aprovado }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        160,
+        -32
+      ],
+      "id": "f88ddf3d-d555-473f-b545-78ed19987b09",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "content": "## Ideias\nAo receber webhook de fase atualizada, identificar a fase por um seletor, e conforme for preparar um telmplate de mensagem para cada.\n\n##no Pipe\nDefinir o que dispara o envio do webhook. \"Card entrar em Fase\" não funciona muito bem para dar report pois os campos ainda não foram preenchidos no momento que entra na fase",
+        "height": 272,
+        "width": 432
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -384,
+        160
+      ],
+      "id": "9ff2574b-9354-408e-ad2e-a361643a042c",
+      "name": "Sticky Note"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "HTTP Request": {
+      "main": [
+        []
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "a1cc2181-3102-4c38-89c5-77ff1b1a16e2",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "2b7799738b289714b82809e333d8afdd1f65aa5c26837c9bb450a46d4b9596c1"
+  },
+  "id": "ksg5Z5wAuBaxMMBt",
+  "tags": []
+}

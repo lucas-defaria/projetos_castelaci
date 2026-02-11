@@ -1,0 +1,456 @@
+{
+  "name": "Wiki FT",
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://wiki.fueltech.local/graphql\n",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcGkiOjUsImdycCI6MSwiaWF0IjoxNzYzMzI3ODg5LCJleHAiOjE3OTQ4ODU0ODksImF1ZCI6InVybjp3aWtpLmpzIiwiaXNzIjoidXJuOndpa2kuanMifQ.n4JGlXtc-WzxsOsGzFk1q1RSCE3lMOAuGXKUNv9GWsDmE49qCykYFZwWgXgiNUyqmFvXgN3FD8GIowXjU4bgvxZhxD6JHw_qjpSmrSQMjb3zZmP68SRH7aaIHdNlcbR8zb2_m03JgJorR1oFYvR8PGoJNggEy-kIE9_LDJ9iMj3KC0RnuLwA1Rlh7w1JtJ-ShhA01We1cBrdvV6PBBg0XFrbnGC4NAexDqCQBc0KWr7J7OOZn1TOA1tchhS8_Ykf559YzfQV8vPMgC34-ZNRpGZypaKUlCS3SH5GnZu-7DOlsW2yBfTzkty84EtPtw4uftSlYjo3AqZIXoxuV9tzyg"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "query",
+              "value": "query { pages { list(orderBy: TITLE) { id path title isPublished updatedAt } } }"
+            }
+          ]
+        },
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1504,
+        272
+      ],
+      "id": "283ede53-7b60-4fed-9263-0f16d9d7863c",
+      "name": "Request All pages"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://wiki.fueltech.local/graphql",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcGkiOjMsImdycCI6MSwiaWF0IjoxNzU4NjY0ODA4LCJleHAiOjE3OTAyMjI0MDgsImF1ZCI6InVybjp3aWtpLmpzIiwiaXNzIjoidXJuOndpa2kuanMifQ.fQxzhUEj9i_NIP9d1d-aZJ87bcTXPupJ6Lg3XB0n3F4mPGqc-VxaxpNpEke7gtJdpag2vLwcrGPq4_xi-q6TJSBOoR317gG04_ytpCEjcM_4yJjlC-FMQ5pdrQNX7GbMgvAOgBzcJ4o-5Z6u3KmRAos_njvvVxFU93mtDu9Edgax2CGxsXWjJ1I9SATIC654cjgIBL3M_ePGrzjYLEA3AIj30G44U7oRmAmhub0-wHi_l9G4-5WMBKw5O3DVVbRWQRFcVAtkT7g1dUJcENTVQ_zjTJspLlxjZDgwCk3Nky1TyAvniYXTW1bNfZVWJ997FYHKifqcVzguYkS79kT4hg"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "query",
+              "value": "=query { pages { single(id:{{ $json.item.id }}) { id title path content createdAt updatedAt } } }"
+            }
+          ]
+        },
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1088,
+        272
+      ],
+      "id": "b5b1eb23-f703-4dc9-8cb5-819c0181b2b0",
+      "name": "Request page content"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1968,
+        272
+      ],
+      "id": "58a425cc-0bed-4615-b507-b1e670bba078",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "data.pages.list",
+        "options": {
+          "destinationFieldName": "item"
+        }
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -1296,
+        272
+      ],
+      "id": "28c7ec78-a769-4cef-a570-808e028465f6",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "data.pages.single.content"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -832,
+        272
+      ],
+      "id": "a38c66c7-0fab-45f7-8614-2232e069f3d7",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        -176,
+        432
+      ],
+      "id": "c11b48ac-7fb8-4518-b51b-ef03b79c01ea",
+      "name": "Default Data Loader"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "=Você é um assistente que responde perguntas usando de preferência o conteúdo da Wiki interna. \nUse a ferramenta \"WikiVectorStore\" sempre que precisar buscar informações documentadas. \nResponda somente com base nos trechos retornados pela ferramenta, resumindo-os quando necessário. \nSe a Wiki não contiver a resposta, diga claramente que a informação não está documentada e evite inferências.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        192,
+        0
+      ],
+      "id": "0f57b7e5-614a-4060-9364-8d40a2fad824",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "public": true,
+        "options": {
+          "showWelcomeScreen": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "f902e6f2-6118-4fad-95a5-742bc7eadd84",
+      "name": "When chat message received",
+      "webhookId": "4091fa09-fb9a-4039-9411-7104d213f601"
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        240,
+        208
+      ],
+      "id": "2859b5f6-cf4c-42bc-bde9-80ff6a7fbe53",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "content": "### Faz a requisição http na API da Wiki.js da FuelTech. Primeiro lista todas as paginas criadas, depois pega o conteúdo de todas",
+        "height": 256,
+        "width": 688
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1568,
+        176
+      ],
+      "typeVersion": 1,
+      "id": "c3458f45-f167-4082-a534-ba3d99ab8013",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "### Trata os dados recebidos, removendo o markdown e juntando todo o conteúdo",
+        "height": 256,
+        "width": 384,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -880,
+        176
+      ],
+      "typeVersion": 1,
+      "id": "fc067434-7940-4c65-a9c4-392bb60acf72",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "memoryKey": {
+          "__rl": true,
+          "mode": "list",
+          "value": "vector_store_key"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreInMemory",
+      "typeVersion": 1.3,
+      "position": [
+        -400,
+        272
+      ],
+      "id": "0c7fe273-a957-474e-b98c-8e3a7f311e42",
+      "name": "Input data"
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(item => {\n    // Pega o campo content ou text, dependendo de onde está\n    let raw = item.json.content || item.json.text || \"\";\n\n    // Garante que é string\n    let text = String(raw);\n\n    // 1️⃣ Remove todas as tags HTML\n    text = text.replace(/<\\/?[^>]+(>|$)/g, \" \");\n\n    // 2️⃣ Converte entidades HTML comuns\n    text = text\n        .replace(/&nbsp;/g, \" \")\n        .replace(/&lt;/g, \"<\")\n        .replace(/&gt;/g, \">\")\n        .replace(/&amp;/g, \"&\")\n        .replace(/&quot;/g, '\"')\n        .replace(/&#39;/g, \"'\");\n\n    // 3️⃣ Remove excesso de espaços e múltiplas quebras de linha\n    text = text.replace(/\\s+/g, \" \").trim();\n\n    return {\n        json: {\n            id: item.json.id || null,\n            title: item.json.title || null,\n            text: text\n        }\n    };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -624,
+        272
+      ],
+      "id": "86181194-7fe7-4661-a213-4ad9f9240ae0",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Consulta a base de conhecimento da Wiki interna. \nDeve ser usada sempre que houver uma dúvida ou pergunta que possa estar documentada na Wiki. \nRetorna trechos relevantes de texto, sem inferir ou inventar informações adicionais.",
+        "memoryKey": {
+          "__rl": true,
+          "mode": "list",
+          "value": "vector_store_key"
+        },
+        "topK": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreInMemory",
+      "typeVersion": 1.3,
+      "position": [
+        256,
+        528
+      ],
+      "id": "a3a84111-03dd-43a6-8d01-dc6949669761",
+      "name": "WikiVectorStore"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -400,
+        624
+      ],
+      "id": "76663764-be54-4806-a655-bdfd87530c8d",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "1zvZLYC68KHiiMvr",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        64,
+        208
+      ],
+      "id": "0906ca07-097f-4cdc-b8e7-889b0cfea4eb",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "1zvZLYC68KHiiMvr",
+          "name": "OpenAi account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Request All pages": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Request All pages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Request page content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Request page content": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Input data",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Input data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WikiVectorStore": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Input data",
+            "type": "ai_embedding",
+            "index": 0
+          },
+          {
+            "node": "WikiVectorStore",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "7543b27d-1ec0-4235-b472-dea993ad0b3d",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "2b7799738b289714b82809e333d8afdd1f65aa5c26837c9bb450a46d4b9596c1"
+  },
+  "id": "eKI1AwdRBh1IK4Sw",
+  "tags": []
+}

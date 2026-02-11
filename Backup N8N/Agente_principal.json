@@ -1,0 +1,319 @@
+{
+  "name": "Agente_principal",
+  "nodes": [
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('When chat message received').item.json.sessionId }}",
+        "contextWindowLength": 20
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        1344,
+        256
+      ],
+      "id": "48eb1122-6b23-4253-baf2-2fd4b0ecb099",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "public": true,
+        "initialMessages": "Bixo 2.0!\nAgora tenho as seguintes habilidades:\n- Calcular renda pelos extratos\n- Responder sobre a renda calculada\n- Responder sobre documentos gerais \n- Conversar!",
+        "options": {
+          "allowFileUploads": true,
+          "subtitle": "Estagiário Castelaci! ",
+          "title": "Bixo 2.0!",
+          "responseMode": "lastNode"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        176,
+        32
+      ],
+      "id": "1b838fe9-1fa7-4059-9add-b25edc760604",
+      "name": "When chat message received",
+      "webhookId": "5f2faff2-5421-4777-a8e4-7aec13e5d5a9"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1168,
+        256
+      ],
+      "id": "b6d32efa-fd42-4928-88d0-6e8b30d95b7a",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "1zvZLYC68KHiiMvr",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": []
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        432,
+        32
+      ],
+      "id": "e289a7a7-809c-45b6-bd1a-f0c91baa3419",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "description": "essa ferramente conversa com outro agente que calcula a renda a partir de dados extraidos de documentos",
+        "workflowId": {
+          "__rl": true,
+          "value": "fcJNyQiVP40cDMVr",
+          "mode": "list",
+          "cachedResultName": "Agente_renda"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "input_calculo_renda": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('input_calculo_renda', `recebe dados extraidos dos documentos `, 'string') }}"
+          },
+          "matchingColumns": [
+            "data0"
+          ],
+          "schema": [
+            {
+              "id": "input_calculo_renda",
+              "displayName": "input_calculo_renda",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        1520,
+        256
+      ],
+      "id": "6d7d604c-3630-4bc4-b9bf-c6825b56f331",
+      "name": "Calcula renda"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.Output_agent_docs }}{{ $('When chat message received').item.json.chatInput }}",
+        "options": {
+          "systemMessage": "Você é um assitente geral que:\n- Responder perguntas gerais sobre documentos\n- Calcula a renda - utilizar ferramentas (extrair dados de documentos e Calcula renda).\n- É um especialista no mercado de crédito imobiliário que envolve, home equity, financiamentos, crédito para construção, alguéis, e corretagem\n- Entende a fundo as regras de financiamento de grandes bancos como Itaú, Santander, Bradesco, Inter e Caixa, consultando suas respectivas regras sempre que necessário. "
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        1280,
+        48
+      ],
+      "id": "e9c24165-6b1c-4e1e-89dd-e53def791f3f",
+      "name": "Agente principal",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "dBdqhJQpNvcGEs4X",
+          "mode": "list",
+          "cachedResultName": "Agente_extrai_info_documentos"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [
+            "data0"
+          ],
+          "schema": [
+            {
+              "id": "data0",
+              "displayName": "data0",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        960,
+        -96
+      ],
+      "id": "e8b0ec97-a26a-493f-9ba4-29aa5cd42a7b",
+      "name": "Execute Workflow"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "791edcf0-8111-4fe4-8712-8b3c86d5c408",
+              "leftValue": "={{ $json.files }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        688,
+        32
+      ],
+      "id": "5f4dc834-2199-441f-b327-7d3a4be94897",
+      "name": "If"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Agente principal",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Agente principal",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calcula renda": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agente principal",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agente principal": {
+      "main": [
+        []
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Execute Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Agente principal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Workflow": {
+      "main": [
+        [
+          {
+            "node": "Agente principal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "c505d4f0-9719-4ad9-9616-3600fdbed99f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "2b7799738b289714b82809e333d8afdd1f65aa5c26837c9bb450a46d4b9596c1"
+  },
+  "id": "Y6jOoSMK0zowuwfm",
+  "tags": []
+}

@@ -1,0 +1,345 @@
+{
+  "name": "Extratos",
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.mistral.ai/v1/files",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer og5CFMLYoEFg7V4aHhs8hidQEB0ktweD"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "purpose",
+              "value": "ocr"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "data0"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        64,
+        80
+      ],
+      "id": "a4217eff-ed86-41bc-b1da-19b9ba61d6a1",
+      "name": "HTTP Request",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.mistral.ai/v1/files/{{ $json.id }}/url",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "expiry",
+              "value": "24"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer og5CFMLYoEFg7V4aHhs8hidQEB0ktweD"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        288,
+        80
+      ],
+      "id": "1f86f315-cede-4531-8339-01f3923af5bc",
+      "name": "HTTP Request1",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.mistral.ai/v1/ocr",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer og5CFMLYoEFg7V4aHhs8hidQEB0ktweD"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"mistral-ocr-latest\",\n  \"document\": {\n    \"type\": \"document_url\",\n    \"document_url\": \"{{ $json.url }}\"\n  },\n  \"include_image_base64\": true\n}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        512,
+        80
+      ],
+      "id": "d525bf10-ecbe-4bdf-bb5a-053e645a6e57",
+      "name": "HTTP Request2",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// n8n Function node -> apenas concatena e retorna markdown unificado\nlet mdList = [];\n\nfor (const it of items) {\n  const j = it.json || {};\n  if (typeof j.markdown === 'string' && j.markdown.trim()) mdList.push(j.markdown);\n  if (Array.isArray(j.pages)) {\n    for (const p of j.pages) if (p && p.markdown) mdList.push(p.markdown);\n  }\n  if (j.document && Array.isArray(j.document.pages)) {\n    for (const p of j.document.pages) if (p && p.markdown) mdList.push(p.markdown);\n  }\n}\n\nreturn [{\n  json: {\n    markdown: mdList.join('\\n')\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        736,
+        80
+      ],
+      "id": "6349f031-1a15-494a-805d-90962873b295",
+      "name": "Concatena paginas geradas"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('When chat message received').item.json.sessionId }}",
+        "contextWindowLength": 20
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        1136,
+        272
+      ],
+      "id": "3728e5ed-fe41-4180-afa8-fbb02ee90b80",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('When chat message received').item.json.chatInput }}{{ $('Concatena paginas geradas').item.json.markdown }}",
+        "options": {
+          "systemMessage": "PROMPT PARA O AGENTE: MOGUI\n---------------------------\n\nContexto:\nVocê é Mogui, assistente operacional da Castelaci Soluções Financeiras. Sua função é analisar extratos bancários ou comprovantes de pagamentos, como olerites e folhas de pagamentos de empresas, e estimar a renda do cliente a partir das **entradas** financeiras (PIX, depósitos, transferências recebidas, salários, recibos, etc.). Você receberá o extrato em texto (formatos variados). Produza uma resposta curta, padronizada e técnica. Se o usuário fizer perguntas sobre informações gerais sobre os dados analisados, responda com base na sua memoria não invente nada.\n\nObjetivo:\n- Calcular a renda mensal (ou média trimestral, quando aplicável) considerando **apenas entradas**.\n- **Não** considerar rendimentos de aplicações (poupança, CDB, juros), **não** considerar saídas (pagamentos) e **ignorar** saldos parciais/finais.\n- Converter quaisquer formatos numéricos para um padrão único antes de somar.\n- Identificar automaticamente o nome do titular no extrato; se não for possível, informar \"não identificado\".\n\nEntrada:\n- Texto do extrato (pode ser de 1 mês ou até 3 meses juntos). Pode ter colunas diferentes dependendo do banco.\n- Opcional: se o usuário fornecer explicitamente o nome do titular, use-o para confirmar/preceder a identificação automática.\n\nRegras de parsing e normalização de valores:\n1. Extraia tokens monetários (ex.: \"R$ 1.234,56\", \"1000.00\", \"1,000.00\", \"1.000,00\", \"(1.234,56)\").\n2. Normalização heurística:\n   - Se houver '.' e ',' e a ',' vier após a última '.', trate como formato BR: remova '.' (milhar) e troque ',' por '.' para conversão numérica.\n   - Se houver apenas '.' com duas casas decimais, trate como ponto decimal (ex.: 1000.00).\n   - Se houver apenas ',' com duas casas decimais, trate como decimal brasileiro (ex.: 1000,00).\n   - Remova símbolos como \"R$\", \"BRL\" antes de converter.\n   - Interprete parênteses ou sinais negativos como valores negativos (desconsiderar: saídas e saldos).\n3. Após conversão numérica, some com precisão de centavos e formate o resultado final como \"R$ 1.234,56\" (formato brasileiro).\n\nIdentificação de entradas válidas (incluir):\n- Transações de crédito com descritores claros como: \"PIX\", \"PIX RECEBIDO\",\"PIX TRANSF\", \"DEPÓSITO\", \"DEPOSITO\", \"DOC\", \"TED\", \"TRANSFERÊNCIA RECEBIDA\", \"Total de entradas\", \"Transferência recebida pelo Pix\", \"TRANSFERENCIA RECEBIDA\", \"SALÁRIO\", \"SALARIO\", \"RECIBO\", \"RECEBIMENTO\", \"RECEBIDO\", \"HONORÁRIOS\", \"COMISSÃO\".\n- Em caso de crédito sem etiqueta explícita, pode ser considerada candidata a entrada (ver heurística ambiguidade abaixo).\n\nHeurística de ambiguidade:\n- Marque uma transação como **unambiguous_incoming** se a descrição contiver termos claros: \"PIX\", \"DEPÓSITO\", \"SALÁRIO\", \"RECEBIDO\", \"RECIBO\".\n- Marque como **excluded** se contiver termos da lista de exclusão.\n- Caso não se encaixe nem em *unambiguous* nem em *excluded*, marque como **ambiguous_incoming** — Não inclua no total, mas conte esse montante para cálculo da certeza e mencione como ambíguo.\n\nExclusões (sempre ignorar):\n- Itens que contenham: \"RENDIMENTO(S)\", \"JUROS\", \"POUPANÇA\", \"POUPANCA\", \"Transferência enviada pelo Pix\", \"APLICAÇÃO(S)\", \"TRANSFERENCIA DA POUPANCA\", \"RESGATE\", \"CDB\", \"FUNDOS\", \"REND.\", \"RENDA VARIÁVEL\", \"PIX ENVIADO\", \"COMPRA CARTÃO\", \"PAGAMENTO\", \"PIX-ENVIADO\" (qualquer referência a aplicações/investimentos).\n- Saldos: \"SALDO\", \"SALDO ANTERIOR\", \"SALDO FINAL\", \"SALDO PARCIAL\", \"SALDO DO DIA\", \"Saldo do dia\".\n- Saídas/pagamentos: \"PAGAMENTO\", \"TARIFA\", \"COMPRA\", \"SAQUE\", \"TRANSFERÊNCIA ENVIADA\",\"Compra com Cartão \", \"Pagamento de Boleto\",\"Pix - Enviado\", \"RFB - PAGAMENTO DARF/RFB\".\n\nAgrupamento por mês:\n- Agrupe lançamentos por mês a partir da data da transação.\n- Se o extrato cobrir **3 meses**, entregue totais separados por mês e calcule a **média trimestral**.\n- Se cobrir 1 mês, entregar total mensal.\n\nIdentificação do titular:\n- Procure cabeçalhos como \"Nome:\", \"Titular:\", \"Cliente:\", \"Nome do titular\", \"TITULAR:\", etc.\n- Se encontrado, use esse nome; se não, coloque \"Nome do cliente: não identificado\" e reduza o nível de certeza.\n\nFormato de saída (obrigatório — seja sucinto):\n- Para 1 mês:Nome do cliente: [nome ou \"não identificado\"]\nRenda calculada: R$ [valor total, 2 decimais]\n\nCritérios: [breve descrição dos valores somados e dos que foram excluídos — ex.: \"incluiu PIX 01/09 R$ 1.200,00; depósito 05/09 R$ 500,00; excluiu rendimento poupança R$ 12,34\"]\n\nNível de certeza: [Alto / Médio / Baixo] — [justificativa curta: ex.: \"Alto: 100% dos lançamentos incluídos são claramente identificados como entradas\"]\n\nObservação: [opcional — ex.: \"Extrato incompleto: faltam dias 20-30/09\"] <-- somente se aplicável- Para 3 meses:Nome do cliente: [nome ou \"não identificado\"]\nMês 1 (YYYY-MM): R$ [valor]\nMês 2 (YYYY-MM): R$ [valor]\nMês 3 (YYYY-MM): R$ [valor]\nMédia trimestral: R$ [valor, 2 decimais]\nNível de certeza: [Alto / Médio / Baixo] — [justificativa curta]\nObservação: [opcional]\n\nCálculo do nível de certeza (regra objetiva):\n1. Calcule total_included = soma(unambiguous_incoming + ambiguous_incoming).\n2. ambiguous_ratio = soma(ambiguous_incoming) / total_included (se total_included = 0, certeza = Baixo).\n3. Base:\n   - ambiguous_ratio ≤ 0.10 → base = Alto\n   - 0.10 < ambiguous_ratio ≤ 0.25 → base = Médio\n   - ambiguous_ratio > 0.25 → base = Baixo\n4. Ajustes:\n   - Se nome não identificado → rebaixa um nível (Alto→Médio, Médio→Baixo).\n   - Se houver \"Extrato incompleto\" detectado → limitar a certeza máxima a Médio e incluir Observação.\n5. A justificativa apresentada junto ao nível deve informar o percentual aproximado de valor ambíguo e a razão da rebaixa (ex.: \"Médio: 18% do total vem de lançamentos sem descrição clara; nome não identificado\").\n\nRegras de conteúdo e estilo:\n- Seja direto e técnico. Não acrescente explicações longas. Use apenas o formato solicitado.\n- Quando houver ambiguidade em valores ou descrições, inclua isso brevemente na seção \"Critérios\" e na justificativa do \"Nível de certeza\".\n- Se detectar transações em outra moeda, ANCORA: se o extrato indicar moeda diferente, **indique na Observação** e devolva o cálculo só se houver taxa de câmbio explícita; caso contrário informe \"Conversão de moeda necessária\" na Observação.\n\nExemplo (entrada simplificada):\n[trecho do extrato]\n10/09/2025 - PIX RECEBIDO - R$ 1.200,00\n05/09/2025 - DEPÓSITO IDENTIFICADO - R$ 500,00\n03/09/2025 - RENDIMENTO POUPANÇA - R$ 12,34\nSaldo final: R$ 5.000,00\nNome: ELIAS DA SILVA PEREIRA\nExemplo (saída esperada):\nNome do cliente: ELIAS DA SILVA PEREIRA\nRenda calculada: R$ 1.700,00\nNível de certeza: Alto — todas as entradas incluídas são explicitamente identificadas como entradas.\n-----------------------------------\nFim do prompt.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        1040,
+        80
+      ],
+      "id": "5b27ab1e-5cbf-4a8f-a6bd-1ce9cc3ffabd",
+      "name": "Calcula renda a partir do extrato",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "content": "Extração dos dados de PDF OCR pelo Mistral",
+        "height": 272,
+        "width": 688
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        0
+      ],
+      "typeVersion": 1,
+      "id": "5f6dce51-2d24-45b3-b068-f1c1fb1e432a",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "Junta dados de varias paginas em um só objeto",
+        "height": 272,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        688,
+        0
+      ],
+      "typeVersion": 1,
+      "id": "df24498c-e884-4377-8d58-d5be1413a77a",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "To-Do\n- Aplicar fluxo para extratos que são imagens (analisar ao receber o arquivo, o tipo, e definir um novo caminho de extração para img)\n- Melhorar o chat com IA.\n"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        272
+      ],
+      "typeVersion": 1,
+      "id": "83fa84df-8296-4e37-b771-e3fb6f644de1",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "public": true,
+        "initialMessages": "Sou a Mogui, sua assitente de analise de renda",
+        "options": {
+          "allowFileUploads": true,
+          "responseMode": "lastNode"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -208,
+        80
+      ],
+      "id": "9080982e-6e9f-402d-ac99-4efdcad841ec",
+      "name": "When chat message received",
+      "webhookId": "b31b29e0-769c-45ea-81ad-3b61cbd58722"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        960,
+        256
+      ],
+      "id": "912e0d5e-4ec9-42ca-8f04-20877774aec3",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "1zvZLYC68KHiiMvr",
+          "name": "OpenAi account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request2": {
+      "main": [
+        [
+          {
+            "node": "Concatena paginas geradas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Concatena paginas geradas": {
+      "main": [
+        [
+          {
+            "node": "Calcula renda a partir do extrato",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Calcula renda a partir do extrato",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Calcula renda a partir do extrato",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calcula renda a partir do extrato": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "725009c4-f172-45d7-8c41-a4755f80a658",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "2b7799738b289714b82809e333d8afdd1f65aa5c26837c9bb450a46d4b9596c1"
+  },
+  "id": "O08qI4aujEI1ujP5",
+  "tags": []
+}

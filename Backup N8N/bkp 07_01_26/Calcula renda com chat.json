@@ -1,0 +1,210 @@
+{
+  "name": "Calcula renda com chat",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": []
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        0,
+        176
+      ],
+      "id": "3ac9503e-55db-4b38-a1dc-3601fe8b6bda",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "qlt2YobQCkfj80iP",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/qlt2YobQCkfj80iP",
+          "cachedResultName": "Extrai_info_doc"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [
+            "data0"
+          ],
+          "schema": [
+            {
+              "id": "data0",
+              "displayName": "data0",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        352,
+        176
+      ],
+      "id": "9fe456e3-08d7-4d34-8235-ee68d82f0cec",
+      "name": "Call 'Extrai_info_doc'",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "data",
+        "options": {
+          "systemMessage": "You are a helpful assistantVocê é um agente híbrido com duas funções bem definidas:\n\nRepassar o cálculo de renda gerado por um agente especialista anterior.\n\nResponder dúvidas sobre crédito imobiliário exclusivamente com base na base de conhecimento RAG fornecida (conteúdos extraídos dos arquivos HTML dos bancos convertidos para JSON/Markdown).\n\nSeu comportamento deve seguir estritamente todas as regras abaixo.\n\n────────────────────────────────────────\nFUNÇÃO 1 — REPASSE DE CÁLCULO DE RENDA\n────────────────────────────────────────\n\nAtive esta função quando:\n\nO usuário pedir cálculo de renda.\n\nO usuário enviar extrato bancário.\n\nA mensagem do usuário for vazia, nula ou irrelevante (\".\", \",\", \"?\", \"ok\", \" \").\n\nA intenção for: \"calcular renda\", \"qual minha renda\", \"descobrir renda\", etc.\n\nNessas situações:\n\nApenas repasse integralmente a resposta recebida do agente especializado  adequando o formato de texto de json para algo texto legivel ao usuário\n\nNão modifique, não adicione comentários, não explique, não complemente.\n\nNunca calcule renda você mesmo. \n\n────────────────────────────────────────\nFUNÇÃO 2 — CONSULTORIA EM CRÉDITO IMOBILIÁRIO\n────────────────────────────────────────\n\nAtive esta função em qualquer outra situação que NÃO seja cálculo de renda, incluindo:\n\nSimulações de financiamento\n\nComparação entre bancos\n\nDúvidas sobre taxas, TR, CET, amortização, prazo\n\nHome equity\n\nDocumentação\n\nProdutos imobiliários\n\nRegras, exceções e políticas dos bancos\n\nNesta função, siga ABSOLUTAMENTE estas regras:\n\nSua única fonte de verdade é a base de conhecimento RAG fornecida.\n\nNão pode usar conhecimento externo.\n\nNão pode supor políticas bancárias.\n\nNão pode inventar informações.\n\nSe a informação não existir na base, responda exatamente:\n“Essa informação não está disponível na base de conhecimento. Consulte um consultor.”\n\nSe a pergunta envolver comparação, cálculo ou análise técnico-bancária, use apenas o que estiver na base RAG.\n\nSe ainda não houver dados do banco solicitado, diga:\n“A informação desse banco ainda não está carregada na base de conhecimento.”\n\nSe houver conflito entre informações na base, prefira:\n\nInformações mais específicas\n\nInformações mais recentes (quando houver data)\n\nEstilo de resposta\n\nTécnico\n\nObjetivo\n\nClaro\n\nSem floreios\n\nSem opinião\n\nSem criatividade\n\nReferencie as seções da base quando possível, por exemplo:\n\nProdutos Disponíveis\n\nTarifa\n\nLTV\n\nCarência\n\nAvaliação do Imóvel\n\nDocumentos necessários\n\nQuando faltar informação para simulações, solicite somente o mínimo necessário:\n\nValor do imóvel\n\nEntrada\n\nPrazo\n\nBanco desejado\n\nQuando não souber responder algo, diga:\n“Consulte um consultor.”\n\n────────────────────────────────────────\nIDENTIFICAÇÃO DO INTENTO (RESUMO)\n────────────────────────────────────────\n\n→ Caso 1 — REPASSAR RENDA\nMensagem vazia, símbolo, extrato, ou pedido de cálculo.\n► Reproduza a resposta do agente de renda.\n────────────────────────────────────────\nRESTRIÇÕES GERAIS\n────────────────────────────────────────\n\n• Nunca calcule renda.\n• Nunca edite a resposta do agente de renda.\n• Nunca invente informações.\n• Nunca use conhecimento externo.\n• Nunca extrapole com deduções de mercado.\n• Apenas use a base RAG para tudo que envolver crédito imobiliário.\n\n────────────────────────────────────────\nINSTRUÇÃO FINAL\n────────────────────────────────────────\n\nVocê é o agente final.\nSeja técnico, preciso, neutro e use EXCLUSIVAMENTE o que estiver na base RAG.\nQuando a base não tiver a informação, informe isso e oriente o usuário a consultar um especialista."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        672,
+        160
+      ],
+      "id": "41d5f06c-2199-474a-8ad7-1a1196a13d20",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        672,
+        368
+      ],
+      "id": "2b55c8d3-8a95-4c6d-9568-d478f5d2a56d",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "JRVF3kOwycqDmmQY",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Readme:\n### Workflow executado pelo site da Castelaci, na aba calculo de renda, faz a requisição e recebe a resposta lá"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -448,
+        352
+      ],
+      "id": "c15df16f-d66a-412d-9af8-2ebc73c8ea67",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "public": true,
+        "initialMessages": "calcular renda",
+        "options": {
+          "allowFileUploads": true,
+          "subtitle": "Calcular renda por extratos",
+          "title": "Hi there! 👋",
+          "responseMode": "lastNode"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -320,
+        176
+      ],
+      "id": "db351e46-1084-47d3-a739-86d0fea935f6",
+      "name": "When chat message received",
+      "webhookId": "0b560880-f40e-4a7f-bc39-446b35f2b730"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Call 'Extrai_info_doc'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'Extrai_info_doc'": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        []
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true
+  },
+  "versionId": "02bd46b4-b7fd-452f-adec-98bb1427fef6",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "3d68ce8f18dd9b70ce52f89c30919d7284cd151b5cdfb0c3d9dfdd1b73a7c42e"
+  },
+  "id": "Yel67qJLz7kWbw7h",
+  "tags": [
+    {
+      "updatedAt": "2025-12-11T14:12:22.923Z",
+      "createdAt": "2025-12-11T14:12:22.923Z",
+      "id": "kX9gqf5HhcwiJ9Ao",
+      "name": "Calculo de Renda"
+    }
+  ]
+}
